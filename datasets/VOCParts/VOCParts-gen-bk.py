@@ -72,7 +72,6 @@ def gen_xml(targets, imgPath, count):
     f.write(obj_final)
     f.close()
     return imgID
-        
 
 
 def findBBox(mask):

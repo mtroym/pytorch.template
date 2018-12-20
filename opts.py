@@ -10,7 +10,7 @@ def parse():
     parser.add_argument('--debug',            default=False,          type=str2bool,   help='Debug mode')
     parser.add_argument('--manualSeed',       default=0,              type=int,        help='manual seed')
     parser.add_argument('--GPU',              default=True,           type=str2bool,   help='Use GPU' )
-    parser.add_argument('--GPUs',             default='0',            type=str,        help='ID of GPUs to use, seperate by ,')
+    parser.add_argument('--GPUs',             default='1',            type=str,        help='ID of GPUs to use, seperate by ,')
     parser.add_argument('--backend',          default='cudnn',        type=str,        help='backend', choices=['cudnn', 'cunn'])
     parser.add_argument('--cudnn',            default='fastest',      type=str,        help='cudnn setting', choices=['fastest', 'deterministic', ' default'])
     # Path options
@@ -19,7 +19,7 @@ def parse():
     parser.add_argument('--resume',           default='../models',    type=str,        help='Path to checkpoint' )
     parser.add_argument('--www',              default='../www',       type=str,        help='Path to visualization' )
     # Data options
-    parser.add_argument('--dataset',          default='imagenetLOC',  type=str,        help='Name of dataset')
+    parser.add_argument('--dataset',          default='VOCParts',  type=str,        help='Name of dataset')
     parser.add_argument('--nThreads',         default=8,              type=int,        help='Number of data loading threads' )
     parser.add_argument('--trainPctg',        default=0.95,           type=float,      help='Percentage of training images')
     parser.add_argument('--imgDim',           default=224,            type=int,        help='Image dimension')

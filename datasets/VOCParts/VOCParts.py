@@ -12,9 +12,33 @@ class VOCparts(Dataset):
         self.dir = imageInfo['basedir']
         self.classDict = imageInfo['classDict']
         self.numClass = len(imageInfo['classDict'])
- 
+        self.imageNames = list(self.imageInfo.keys())
+
+    def loadAnnos(self, index):
+        annotation_list = self.imageInfo[self.imageNames[index]]
+        annotations     = np.zeros((0, 5))
+        if len(annotation) == 0:
+            return annotations
+        for idx, a in enumerate(annotation_list):
+            # some annotations have basically no width / height, skip them
+            x1 = a['x1']
+            x2 = a['x2']
+            y1 = a['y1']
+            y2 = a['y2']
+            if (x2-x1) < 1 or (y2-y1) < 1:
+                continue
+            annotation        = np.zeros((1, 5))
+            annotation[0, 0] = x1
+            annotation[0, 1] = y1
+            annotation[0, 2] = x2
+            annotation[0, 3] = y2
+            annotation[0, 4]  = self.name_to_label(a['class'])
+            annotations       = np.append(annotations, annotation, axis=0)
+
+        return annotations
+    
     def __getitem__(self, index):
-        path = self.imageInfo['imagePath'][index]
+        path = os.path.join(self.basedir, self.imageInfo['train'][index])
         image = cv2.imread(path)
         clas = self.imageInfo['class'][index]
         classVec = np.zeros((self.numClass,1))

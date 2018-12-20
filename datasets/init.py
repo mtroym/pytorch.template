@@ -14,9 +14,9 @@ def create(opt, split):
 
     if not os.path.exists(cachePath) or not isvalid(opt, cachePath):
         script = opt.dataset + '-gen'
-        gen = importlib.import_module('datasets.' + script)
+        gen = importlib.import_module('datasets.' + opt.dataset + '.' + script)
         gen.exec(opt, cachePath)
 
     info = torch.load(cachePath)
-    dataset = importlib.import_module('datasets.' + opt.dataset)
+    dataset = importlib.import_module('datasets.' + opt.dataset + '.' + opt.dataset)
     return dataset.getInstance(info, opt, split)
