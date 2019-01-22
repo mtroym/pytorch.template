@@ -18,7 +18,8 @@ def loadPaths(base, split):
     path_input = os.path.join(base, split + "_blur")
     path_target = os.path.join(base, split + "_clear")
     list_input, list_target = listdir_(path_input), listdir_(path_target)
-    assert list_input[10].split("/")[-1] == list_target[10].split("/")[-1], "WARNING, sanity check in data loader failed."
+    assert list_input[10].split("/")[-1] == list_target[10].split("/")[-1], \
+        "WARNING, sanity check in data loader failed."
     return list_input, list_target
 
 
