@@ -2,18 +2,17 @@ import os
 import torch
 import torch.nn as nn
 import torch.backends.cudnn as cudnn
-from torch.nn.parallel.data_parallel import DataParallel
 import importlib
 
+
 def setup(opt, checkpoint):
-    model = None
     optimState = None
 
     print('=> Creating model from file: models/' + opt.netType + '.py')
-    models = importlib.import_module('models.' + opt.netType)
+    models = importlib.import_module('models.' + opt.netType + '.' + opt.netType)
     model = models.createModel(opt)
 
-    if checkpoint != None:
+    if checkpoint is not None:
         modelPath = os.path.join(opt.resume, checkpoint['modelFile'])
         assert os.path.exists(modelPath), '=> WARNING: Saved model state not found: ' + modelPath
         print('=> Resuming model state from ' + modelPath)

@@ -129,7 +129,7 @@ class resnetTrainer():
             if i == self.opt.visTest:
                 self.visualize(visImg, epoch, 'test', maxnum)
 
-        log = '* Finished testing epoch # %d     Loss: %1.4f | Acc: %1.4f %% (%d/%d)\n' % (epoch, avgLoss, 100. * correct / total, correct, total)
+        log = '\n* Finished testing epoch # %d     Loss: %1.4f | Acc: %1.4f %% (%d/%d)\n' % (epoch, avgLoss, 100. * correct / total, correct, total)
         self.logger['val'].write(log)
         print(log)
 

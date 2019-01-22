@@ -3,6 +3,7 @@ import matplotlib as mpl
 mpl.use('Agg')
 import matplotlib.pyplot as plt
 
+
 def draw(dirPath, plotPath):
     loss = []
     tloss = []
@@ -30,7 +31,6 @@ def draw(dirPath, plotPath):
                 tloss.append(float(line.split(':')[1].split()[0]))
                 axtloss.append(float(line.split()[5]))
 
-
     fig = plt.figure()
     ax = fig.add_subplot(111)
     
@@ -42,6 +42,7 @@ def draw(dirPath, plotPath):
     plt.close()
 
     return min(tloss)
+
 
 modelPath = '../models'
 for d in os.listdir(modelPath):
