@@ -30,7 +30,6 @@ def IoU(Reframe, GTframe):
         height = height1 + height2 - ( endy - starty )
 
         if width <= 0 or height <= 0:
-#             print(width, height)
             ratio = 0
         else:
             Area = width * height
@@ -38,7 +37,6 @@ def IoU(Reframe, GTframe):
             Area2 = width2 * height2
             ratio = Area * 1. / (Area1+Area2-Area)
         result[i] = ratio
-#     print(GTframe)
     return result
 
 
