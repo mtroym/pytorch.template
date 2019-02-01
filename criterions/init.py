@@ -1,6 +1,7 @@
-import os
-import torch
 import importlib
+import os
+
+import torch
 
 
 def setup(opt, checkpoint, model):

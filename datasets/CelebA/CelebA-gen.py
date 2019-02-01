@@ -1,5 +1,7 @@
 import os
+
 import torch
+
 
 def exec(opt, cacheFilePath):
     assert os.path.exists(opt.data), 'Data directory not found: ' + opt.data

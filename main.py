@@ -1,7 +1,9 @@
-import sys
-import opts
-import math
 import importlib
+import math
+import sys
+
+import opts
+
 print("=> initializing. parsing arguments.")
 opt = opts.parse()
 
@@ -21,8 +23,6 @@ except ImportError:
 # Data loading
 print('=> Setting up data loader')
 trainLoader, valLoader = DataLoader.create(opt)
-
-
 
 # Load previous checkpoint, if it exists
 print('=> Checking checkpoints')
@@ -59,6 +59,6 @@ for epoch in range(startEpoch, opt.nEpochs + 1):
         bestLoss = testLoss
         print(' * Best model: \033[1;36m%1.4f\033[0m * ' % testLoss)
 
-    checkpoints.save(epoch, trainer.model, criterion, metric, trainer.optimizer, bestModel, testLoss ,opt)
+    checkpoints.save(epoch, trainer.model, criterion, metric, trainer.optimizer, bestModel, testLoss, opt)
 
 print(' * Finished Err: \033[1;36m%1.4f\033[0m * ' % bestLoss)

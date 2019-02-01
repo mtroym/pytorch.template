@@ -1,7 +1,9 @@
 import math
+import random
+
 import numpy as np
 import torch
-import random
+
 
 # ipt is nparray with dimension (height, width, channel)
 # xml is nparray with dimension (height, width)
