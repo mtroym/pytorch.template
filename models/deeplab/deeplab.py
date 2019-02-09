@@ -4,7 +4,7 @@ import numpy as np
 import torch.nn.functional as F
 from models.deeplab.ASPP import ASPP
 from models.backbones.Xception import Xception
-
+import models.torchLayer as tl
 BACKBONE = {'Xception': Xception}
 
 
@@ -13,12 +13,12 @@ class DeepLab(nn.Module):
         super(DeepLab, self).__init__()
         if backbone == 'Xception':
             self.backbone = BACKBONE[backbone](outstride=outstride)
-        self.x4size = (int(np.ceil(inputsize[0] / np.sqrt(outstride))), int(np.ceil(inputsize[1] / np.sqrt(outstride))))
-        self.x16size = (int(np.ceil(inputsize[0] / outstride)), int(np.ceil(inputsize[1] / outstride)))
-        self.ASPP = ASPP(2048, 256, size=self.x16size)
+        self.x4size = (int(np.ceil(inputsize[0] / 4)), int(np.ceil(inputsize[1] / 4)))
+        self.xoutsize = (int(np.ceil(inputsize[0] / outstride)), int(np.ceil(inputsize[1] / outstride)))
+        self.ASPP = ASPP(2048, 256, size=self.xoutsize)
         self.inputsize = inputsize
-        self.x4conv = nn.Conv2d(128, 256, kernel_size=(1, 1), padding=0, stride=1, bias=False)
-        self.decoder_conv = nn.Conv2d(in_channels=256*2, out_channels=classes, kernel_size=(3, 3), padding=1)
+        self.x4conv = tl.SeparableConv2d(128, 128, kernel_size=(1, 1), stride=1, bias=False, bn=False)
+        self.decoder_conv = tl.SeparableConv2d(256 + 128, classes, kernel_size=(3, 3), bias=False, bn=False)
 
     def forward(self, input):
         input, low_level_feat = self.backbone(input)

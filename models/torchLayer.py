@@ -34,10 +34,14 @@ class SeparableConv2d(nn.Module):
             inputs = self.pointwise_bn(inputs)
         return inputs
 
-class BilinearUpsampler(nn.Module):
-    def __init__(self):
-        super(BilinearUpsampler, self).__init__()
 
+class BilinearUpsampler(nn.Module):
+    def __init__(self, size):
+        super(BilinearUpsampler, self).__init__()
+        self.size = size
+
+    def forward(self, input):
+        return F.interpolate(input, self.size, mode='bilinear', align_corners=True)
 
 
 if __name__ == '__main__':

@@ -32,8 +32,7 @@ class ASPP(nn.Module):
         return out
 
 
-
 if __name__ == '__main__':
-    net = ASPP(2048, 256, size=(int(299/8), int(299/8)))
-    x = torch.randn((1, 2048, int(299/8), int(299/8)))
+    net = ASPP(2048, 256, size=(int(299 / 8), int(299 / 8)))
+    x = torch.randn((1, 2048, int(299 / 8), int(299 / 8)))
     print(net(x).shape)
