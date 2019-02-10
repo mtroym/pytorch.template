@@ -5,6 +5,7 @@ import torch.nn.functional as F
 from models.deeplab.ASPP import ASPP
 from models.backbones.Xception import Xception
 import models.torchLayer as tl
+
 BACKBONE = {'Xception': Xception}
 
 
@@ -25,7 +26,6 @@ class DeepLab(nn.Module):
         input = self.ASPP(input)
         decode_aspp = F.interpolate(input, self.x4size, mode='bilinear', align_corners=True)
         decode_feat = self.x4conv(low_level_feat)
-        print(decode_aspp.shape)
         decode_in = torch.cat((decode_aspp, decode_feat), 1)
         out = self.decoder_conv(decode_in)
         out = F.interpolate(out, self.inputsize, mode='bilinear', align_corners=True)
@@ -42,7 +42,8 @@ def createModel(opt):
 refers_to = "https://github.com/bonlime/keras-deeplab-v3-plus/blob/master/model.py"
 
 if __name__ == '__main__':
-    a = DeepLab(inputsize=(299, 299), backbone='Xception', outstride=16, classes=21)
-    x = torch.randn((1, 3, 299, 299))
+    inputsize = (100, 100)
+    a = DeepLab(inputsize=inputsize, backbone='Xception', outstride=8, classes=21)
+    x = torch.randn((1, 3, *inputsize))
     print(a(x).shape)
     # print(299.0 / 2 / 2 / 2 / 2)

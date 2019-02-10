@@ -20,14 +20,14 @@ class ASPP(nn.Module):
 
     def forward(self, x):
         feat = self.at_poolall(x)
-        # print(self.size)
         feat = F.interpolate(self.feat_conv(feat), self.size, mode='bilinear', align_corners=True)
         x1conv = self.at_pool1x1(x)
         x3_conv_1 = self.at_pool3x3_1(x)
         x3_conv_2 = self.at_pool3x3_2(x)
         x3_conv_3 = self.at_pool3x3_3(x)
-        # print(x1conv.shape, x3_conv_2.shape, feat.shape)
-        all = torch.cat((feat, x1conv, x3_conv_1, x3_conv_2, x3_conv_3), 1)
+        at_all = torch.cat((x1conv, x3_conv_1, x3_conv_2, x3_conv_3), 1)
+        at_all = F.interpolate(at_all, self.size, mode='bilinear', align_corners=True)
+        all = torch.cat((at_all, feat), 1)
         out = self.concate_project_drop(F.relu(self.concate_project_bn(self.concate_project_conv(all))))
         return out
 

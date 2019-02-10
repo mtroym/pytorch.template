@@ -20,7 +20,14 @@ class SeparableConv2d(nn.Module):
         pad_total = kernel_size_effective - 1
         pad_beg = pad_total // 2
         pad_end = pad_total - pad_beg
-        padded_inputs = F.pad(inputs, [pad_beg, pad_end, pad_beg, pad_end], mode='reflect')
+        # print(inputs.shape)
+        if pad_beg > inputs.shape[2] or pad_end > inputs.shape[3]:
+            diff_0 = pad_beg - inputs.shape[2] + 1
+            diff_1 = pad_end - inputs.shape[3] + 1
+            inputs = F.pad(inputs, [inputs.shape[2] - 1, inputs.shape[3] - 1, inputs.shape[2] - 1, inputs.shape[3] - 1],
+                           mode='reflect')
+            pad_beg, pad_end = diff_0, diff_1
+        padded_inputs = F.pad(inputs, [pad_beg, pad_end, pad_beg, pad_end])
         return padded_inputs
 
     def forward(self, inputs):
