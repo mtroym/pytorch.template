@@ -7,6 +7,7 @@ import torch.nn.functional as F
 class ASPP(nn.Module):
     def __init__(self, inplane, outplane, rates=(1, 6, 12, 18), size=None):
         super(ASPP, self).__init__()
+        self.size = size
         self.at_pool1x1 = tl.SeparableConv2d(inplane, outplane, kernel_size=(1, 1), dilation=rates[0], bn=True)
         self.at_pool3x3_1 = tl.SeparableConv2d(inplane, outplane, kernel_size=(3, 3), dilation=rates[1], bn=True)
         self.at_pool3x3_2 = tl.SeparableConv2d(inplane, outplane, kernel_size=(3, 3), dilation=rates[2], bn=True)
@@ -15,7 +16,6 @@ class ASPP(nn.Module):
         self.feat_conv = nn.Conv2d(inplane, outplane, kernel_size=(1, 1), bias=False)
         self.concate_project_bn = nn.BatchNorm2d(outplane)
         self.concate_project_drop = nn.Dropout2d(0.1)
-        self.size = size
         self.at_poolall = nn.AvgPool2d(kernel_size=self.size)
 
     def forward(self, x):

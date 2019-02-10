@@ -152,7 +152,7 @@ class Xception(nn.Module):
         else:
             config = configs[int(log(outstride) / log(2)) - 3]
 
-        self.entry = Xception_entry_flow(3, 728, last_stride=config['entry_last_stride'])
+        self.entry = Xception_entry_flow(1, 728, last_stride=config['entry_last_stride'])
         self.middle = Xception_middle_flow(728, 8, dilation=config['middle_dilation'])
         self.exit = Xception_exit_flow(728, 1024, 2048, dilations=config['exit_dilation'])
         # in

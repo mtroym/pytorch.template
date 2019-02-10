@@ -3,6 +3,41 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 
+class ConvBlock(torch.nn.Module):
+    def __init__(self, input_size, output_size, kernel_size=4, stride=2, padding=1, bias=True, activation='relu',
+                 norm='batch'):
+        super(ConvBlock, self).__init__()
+        self.conv = nn.Conv2d(input_size, output_size, kernel_size, stride, padding, bias=bias)
+        self.norm = norm
+        if self.norm == 'batch':
+            self.bn = nn.BatchNorm2d(output_size)
+        elif self.norm == 'instance':
+            self.bn = nn.InstanceNorm2d(output_size)
+
+        self.activation = activation
+        if self.activation == 'relu':
+            self.act = nn.ReLU(True)
+        elif self.activation == 'prelu':
+            self.act = nn.PReLU()
+        elif self.activation == 'lrelu':
+            self.act = nn.LeakyReLU(0.2, True)
+        elif self.activation == 'tanh':
+            self.act = nn.Tanh()
+        elif self.activation == 'sigmoid':
+            self.act = nn.Sigmoid()
+
+    def forward(self, x):
+        if self.norm != "None":
+            out = self.bn(self.conv(x))
+        else:
+            out = self.conv(x)
+
+        if self.activation != "None":
+            return self.act(out)
+        else:
+            return out
+
+
 class SeparableConv2d(nn.Module):
     def __init__(self, inplanes, planes, kernel_size=3, stride=1, dilation=1, bias=False, bn=False):
         super(SeparableConv2d, self).__init__()
