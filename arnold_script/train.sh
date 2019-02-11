@@ -29,9 +29,9 @@ exec $@
 #                                --epochNum 0 --batchSize 64      \
 
 # & mv ../models/* /mnt/cephfs/lab/tony/models/
-#python main.py --data ../data/ \
-#               --gen ../gen/ \
-#               --batchSize 1 --debug True \
-#               --epochNum 0 --netType  deeplab \
-#               --dataset segTHOR --metrics '[]'
+python main.py --data ../data/ \
+               --gen ../gen/ \
+               --batchSize 1 --debug True \
+               --epochNum 0 --netType  deeplab \
+               --dataset segTHOR --metrics '[]'
 # & mv ../gen
