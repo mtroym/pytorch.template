@@ -4,12 +4,17 @@ cd $THIS_DIR # To run on Arnold
 echo "\$THIS_DIR = ${THIS_DIR}
 "
 echo "copying data to the lab cluster..."
-cp /mnt/cephfs/lab/tony/segTHOR.tar ../../
+mkdir /opt/tiger/data/
+cp /mnt/cephfs/lab/tony/segTHOR.tar /opt/tiger/data/
 echo "modified. -> /mnt/cephfs/lab/tony/cnnface.tar \$THIS_DIR"
 echo "
 decompressing data ..."
 #echo "modified. -> tar -xf cnnface.tar"
+cd /opt/tiger/data/
 tar -xf segTHOR.tar
+cd $THIS_DIR
+cd ..
+ls
 echo "done decompressing!
 "
 echo "arguements:
@@ -29,4 +34,4 @@ exec $@
 #               --batchSize 1 --debug True \
 #               --epochNum 0 --netType  deeplab \
 #               --dataset segTHOR --metrics '[]'
-# & mv ../genΩ
+# & mv ../gen
