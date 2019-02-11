@@ -77,7 +77,7 @@ class Trainer:
 
     def test(self, trainLoader, epoch):
         self.model.eval()
-        print("=> Training epoch")
+        print("=> Validating epoch")
         avgLoss = RunningAverage()
         avgAcces = {}
         for metric in self.metrics:
@@ -95,7 +95,8 @@ class Trainer:
             dataTime = time.time() - start
 
             output = self.model(inputV)
-            loss = self.criterion(output, targetV) * 255 * 255 / 144 / 144
+            output = nn.LogSoftmax()(output)
+            loss = self.criterion(output, targetV.long()[:, 0, :, :])
 
             # LOG ===
             runTime = time.time() - start

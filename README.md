@@ -6,4 +6,5 @@ pytorch1.0.0 training framework - in progress
 # datasets.
 - [x] CelebA - face dataset
 - [x] VOCParts - detection dataset
+- [x] segTHOR - medical image segmentation dataset.
 - [ ] VOC2012/2007 - object detection/segmentation dataset
