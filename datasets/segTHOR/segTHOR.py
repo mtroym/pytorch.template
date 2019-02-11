@@ -12,22 +12,16 @@ class SegTHOR(Dataset):
         self.split = split
         self.dir = imageInfo['basedir']
         self.pathData = imageInfo[split]
-        self.X, self.Y = np.load(self.pathData)
-        self.inputSize = self.X.shape[2:]
-        # print(self.inputSize)
-
+        self.inputSize = np.load(self.pathData[0])[0].shape[1:]
+        print(self.inputSize)
     def __getitem__(self, index):
-        image = self.X[index, :, :]
-        target = self.Y[index, :, :]
-        # print(image.shape)
-        # w, h = image.shape
-        # image = self.preprocess(image)
+        image, target = np.load(self.pathData[index])
         image = torch.from_numpy(image).float()
         target = torch.from_numpy(target).float()
         return image, target
 
     def __len__(self):
-        return self.X.shape[0]
+        return len(self.pathData)
 
     def preprocess(self, im):
         mean = torch.Tensor([0.485, 0.456, 0.406])

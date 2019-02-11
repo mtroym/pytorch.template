@@ -6,7 +6,6 @@ import torch
 
 from util.progbar import progbar
 
-
 def exec(opt, cacheFilePath):
     assert os.path.exists(opt.data), 'Data directory not found: ' + opt.data
     nib.Nifti1Header.quaternion_threshold = - np.finfo(np.float32).eps * 10  # 松弛一下限
@@ -29,16 +28,10 @@ def exec(opt, cacheFilePath):
 def loadPaths(opt, base, pa, split):
     print('\t-> processing {} data'.format(split))
     X = []
-    Y = []
+    if not os.path.exists(os.path.join(base, split)):
+        os.makedirs(os.path.join(base, split))
     preserving_ratio = 0.001
     bar = progbar(len(pa), width=opt.barwidth)
-    save_path = os.path.join(base, split + '.npy')
-    if os.path.exists(save_path):
-        print('\t-> the {} data already exists to {}'.format(split, save_path))
-        X, Y = np.load(save_path)
-        print('\t-> total {} data num: {}'.format(split, X.shape[0]))
-        del X, Y
-        return save_path
     for idx, patients in enumerate(pa):
         # file contains GT.nii // patient_xx.nii.gz
         GT_path = os.path.join(base, patients, 'GT.nii.gz')
@@ -53,15 +46,11 @@ def loadPaths(opt, base, pa, split):
                 continue
             img_2d = img[:, :, i]
             img_2d = img_2d / 127.5 - 1
-            X.append(img_2d)
-            Y.append(GT_2d)
+
+            GT_2d = GT_2d.reshape((1, *GT_2d.shape))
+            img_2d = img_2d.reshape((1, *img_2d.shape))
+            pathALL = os.path.join(base, split, patients + '_{}'.format(i) + '.npy')
+            np.save(pathALL, [img_2d, GT_2d])
+            X.append(pathALL)
         bar.update(idx + 1)
-    X = np.asarray(X, dtype=np.float32)
-    Y = np.asarray(Y, dtype=np.uint8)
-    X = X.reshape((X.shape[0], 1, *X.shape[1:]))
-    Y = Y.reshape((Y.shape[0], 1, *Y.shape[1:]))
-    # print(X.shape, Y.shape)
-    np.save(save_path, [X, Y])
-    print('\n\t=> save the {} data to {}'.format(split, save_path))
-    # return path to load.
-    return save_path
+    return X
