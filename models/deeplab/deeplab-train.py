@@ -1,4 +1,5 @@
 import os
+import torch.nn as nn
 import torch.optim as optim
 from torch.autograd import Variable
 from util.utils import RunningAverage
@@ -46,7 +47,8 @@ class Trainer:
             dataTime = time.time() - start
 
             output = self.model(inputV)
-            loss = self.criterion(output, targetV)
+            output = nn.LogSoftmax()(output)
+            loss = self.criterion(output, targetV.long()[:, 0, :, :])
             loss.backward()
             self.optimizer.step()
 

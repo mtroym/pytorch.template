@@ -11,7 +11,7 @@ def initCriterion(criterion, model):
 
 
 def createCriterion(opt, model):
-    criterion = CombinedLoss(is_weight=True, is_log_dice=True)
+    criterion = nn.NLLLoss2d()
     return criterion
 
 
@@ -30,18 +30,15 @@ def createMetrics(opt, model):
 
 
 class BCELoss2d(nn.Module):
-    """
-    Binary Cross Entropy loss function
-    """
-
-    def __init__(self):
+    def __init__(self, weight=None, reduction='mean'):
         super(BCELoss2d, self).__init__()
-        self.bce_loss = nn.BCEWithLogitsLoss()
+        self.bce_loss = nn.BCELoss(weight, reduction='mean')
 
-    def forward(self, logits, labels):
-        logits_flat = logits.view(-1)
-        labels_flat = labels.view(-1)
-        return self.bce_loss(logits_flat, labels_flat)
+    def forward(self, logits, targets):
+        probs = F.softmax(logits)
+        probs_flat = probs.view(-1)
+        targets_flat = targets.view(-1)
+        return self.bce_loss(probs_flat, targets_flat)
 
 
 class WeightedBCELoss2d(nn.Module):
