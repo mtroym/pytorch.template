@@ -58,7 +58,7 @@ def parse():
     parser.add_argument('--frozen', default=False, type=str2bool, help='Weather freeze the pretrain')
 
     # Other model options
-    parser.add_argument('--numClasses', default=4, type=int, help='Number of classes in the dataset')
+    parser.add_argument('--numClasses', default=5, type=int, help='Number of classes in the dataset')
     parser.add_argument('--suffix', default='', type=str, help='Suffix for saving the model')
     parser.add_argument('--dropoutRate', default=0.2, type=float, help='Drop out Rate of fc.')
     parser.add_argument('--numChannels', default=64, type=int, help='number of channel of srcnn')

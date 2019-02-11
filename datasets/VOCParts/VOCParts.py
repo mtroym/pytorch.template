@@ -17,7 +17,7 @@ class VOCparts(Dataset):
     def loadAnnos(self, index):
         annotation_list = self.imageInfo[self.imageNames[index]]
         annotations     = np.zeros((0, 5))
-        if len(annotation) == 0:
+        if len(annotations) == 0:
             return annotations
         for idx, a in enumerate(annotation_list):
             # some annotations have basically no width / height, skip them

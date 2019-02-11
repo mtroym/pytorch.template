@@ -6,7 +6,7 @@ import torch
 
 def isvalid(opt, cachePath):
     info = torch.load(cachePath)
-    if info['basedir'] != opt.data:
+    if info['basedir'] != os.path.join(opt.data, 'train'):
         return False
     return True
 
