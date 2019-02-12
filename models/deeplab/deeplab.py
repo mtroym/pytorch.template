@@ -4,7 +4,7 @@ import numpy as np
 import torch.nn.functional as F
 from models.deeplab.ASPP import ASPP
 from models.backbones.Xception import Xception
-import models.torchLayer as tl
+import models.LibTorchLayer as tl
 
 BACKBONE = {'Xception': Xception}
 
@@ -42,8 +42,8 @@ def createModel(opt):
 refers_to = "https://github.com/bonlime/keras-deeplab-v3-plus/blob/master/model.py"
 
 if __name__ == '__main__':
-    inputsize = (512, 512)
-    batch = 16
+    inputsize = (200, 200)
+    batch = 1
     a = DeepLab(inputsize=inputsize, backbone='Xception', outstride=16, classes=5)
     x = torch.randn((batch, 1, *inputsize))
     print(a(x).shape)

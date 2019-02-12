@@ -1,7 +1,7 @@
 from numpy import log
 import torch.nn as nn
 
-import models.torchLayer as tl
+import models.LibTorchLayer as tl
 
 __all__ = ['Xception']
 

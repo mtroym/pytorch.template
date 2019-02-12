@@ -14,13 +14,13 @@ def exec(opt, cacheFilePath):
     patients = [path for path in os.listdir(training_data_path) if path.startswith('Patient')]
     train_pa = patients[:int(len(patients) * split_ratio)]
     val_pa = patients[int(len(patients) * split_ratio):]
-    print("************* Generating list of dat ....**************")
+    print("************* Generating list of data ....**************")
     info = {
         'basedir': training_data_path,
         'val': loadPaths(opt, training_data_path, val_pa, 'val'),
         'train': loadPaths(opt, training_data_path, train_pa, 'train')
     }
-    print("************* Saved the cached file in {} **************".format(cacheFilePath))
+    print("^^^^^^^^^^^^ Saved the cached file in {} ^^^^^^^^^^^^^".format(cacheFilePath))
     torch.save(info, cacheFilePath)
     return info
 
@@ -46,7 +46,6 @@ def loadPaths(opt, base, pa, split):
                 continue
             img_2d = img[:, :, i]
             img_2d = img_2d / 127.5 - 1
-
             GT_2d = GT_2d.reshape((1, *GT_2d.shape))
             img_2d = img_2d.reshape((1, *img_2d.shape))
             pathALL = os.path.join(base, split, patients + '_{}'.format(i) + '.npy')
