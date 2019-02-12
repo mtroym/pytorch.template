@@ -14,12 +14,15 @@ cd /opt/tiger/data/
 tar -xf segTHOR.tar
 cd $THIS_DIR
 cd ..
+echo "envs:
+========="
+echo "\$GEN=${GEN}, \$MODELS=${MODELS}, \$WWW=${WWW}"
+echo "================"
 echo "arguements:
 ---------"
 echo "${@}"
 echo "----------"
 exec $@
-echo "\$GEN=${GEN}, \$MODELS=${MODELS}, \$WWW=${WWW}"
 #python3 main.py --data ../data/ --batchSize 1 --debug True --epochNum 0 --netType  deeplab --dataset segTHOR --metrics '[]'
 # Do like this.
 # python3 main.py --data ./data/ --gen /mnt/cephfs/lab/tony/gen/  \
