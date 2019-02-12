@@ -76,6 +76,14 @@ def parse():
     if opt.GPU:
         torch.cuda.manual_seed_all(opt.manualSeed)
 
+    # for arnold script.
+    print('**************** DEFINE SOME PATH *****************')
+    print('\t-=> opt.data='+opt.data)
+    print('\t-=> opt.gen='+opt.gen)
+    print('\t-=> opt.www='+opt.www)
+    print('\t-=> opt.resume='+opt.resume)
+    print('**************** ^^^^^^^^^^^^^^^^ *****************')
+
     if opt.debug:
         opt.nEpochs = 1
         opt.nThreads = 1
