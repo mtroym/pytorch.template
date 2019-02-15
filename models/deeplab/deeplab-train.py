@@ -123,7 +123,7 @@ class Trainer:
 
 
     def LRDecay(self, epoch):
-        self.scheduler = optim.lr_scheduler.StepLR(self.optimizer, step_size=self.opt.LRDParam, gamma=0.1, last_epoch=epoch-2)
+        self.scheduler = optim.lr_scheduler.ExponentialLR(self.optimizer, gamma=0.95, last_epoch=epoch-2)
 
     def LRDecayStep(self):
         self.scheduler.step()
