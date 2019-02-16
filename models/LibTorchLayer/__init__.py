@@ -3,8 +3,9 @@ import torch.nn.functional as f
 import torch.optim as optim
 from torch import nn
 from torch.autograd import Variable
+from .ConvLSTM2d import ConvLSTM2d, ConvLSTM2dCell
 
-all = ["ConvBlock", "SeparableConv2d", "ConvLSTM", "BDConvLSTM"]
+all = ["ConvBlock", "SeparableConv2d", "ConvLSTM2d", "BiConvLSTM2d"]
 class ConvBlock(torch.nn.Module):
     def __init__(self, input_size, output_size, kernel_size=4, stride=2, padding=1, bias=True, activation='relu',
                  norm='batch'):

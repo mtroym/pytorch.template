@@ -1,9 +1,9 @@
+import torch
 import torch.nn as nn
 from torch.autograd import Variable
-import torch
 
 
-class ConvLSTMCell(nn.Module):
+class ConvLSTM2dCell(nn.Module):
 
     def __init__(self, input_size, input_dim, hidden_dim, kernel_size, bias):
         """
@@ -23,7 +23,7 @@ class ConvLSTMCell(nn.Module):
             Whether or not to add the bias.
         """
 
-        super(ConvLSTMCell, self).__init__()
+        super(ConvLSTM2dCell, self).__init__()
 
         self.height, self.width = input_size
         self.input_dim = input_dim
@@ -55,14 +55,14 @@ class ConvLSTMCell(nn.Module):
         c_next = f * c_cur + i * g
         h_next = o * torch.tanh(c_next)
 
-        return h_next, c_next
+        return h_next, (h_next, c_next)
 
     def init_hidden(self, batch_size):
         return (Variable(torch.zeros(batch_size, self.hidden_dim, self.height, self.width)),
                 Variable(torch.zeros(batch_size, self.hidden_dim, self.height, self.width)))
 
 
-class ConvLSTM(nn.Module):
+class ConvLSTM2d(nn.Module):
     """
     @input_size: (int, int)
         Height and width of input tensor as (height, width).
@@ -78,11 +78,13 @@ class ConvLSTM(nn.Module):
         Whether the data is (B, T, C, H, W) or (T, B, C, H, W)
     @bias: bool
         Whether there is a bias term
-    @return_all_layers
+    @return_all_layers: bool
+
     """
+
     def __init__(self, input_size, input_dim, hidden_dim, kernel_size, num_layers,
-                 batch_first=False, bias=True, return_all_layers=False):
-        super(ConvLSTM, self).__init__()
+                 bias=True):
+        super(ConvLSTM2d, self).__init__()
 
         self._check_kernel_size_consistency(kernel_size)
 
@@ -97,19 +99,17 @@ class ConvLSTM(nn.Module):
         self.hidden_dim = hidden_dim
         self.kernel_size = kernel_size
         self.num_layers = num_layers
-        self.batch_first = batch_first
         self.bias = bias
-        self.return_all_layers = return_all_layers
 
         cell_list = []
         for i in range(0, self.num_layers):
             cur_input_dim = self.input_dim if i == 0 else self.hidden_dim[i - 1]
 
-            cell_list.append(ConvLSTMCell(input_size=(self.height, self.width),
-                                          input_dim=cur_input_dim,
-                                          hidden_dim=self.hidden_dim[i],
-                                          kernel_size=self.kernel_size[i],
-                                          bias=self.bias))
+            cell_list.append(ConvLSTM2dCell(input_size=(self.height, self.width),
+                                            input_dim=cur_input_dim,
+                                            hidden_dim=self.hidden_dim[i],
+                                            kernel_size=self.kernel_size[i],
+                                            bias=self.bias))
 
         self.cell_list = nn.ModuleList(cell_list)
 
@@ -127,51 +127,41 @@ class ConvLSTM(nn.Module):
         -------
         last_state_list, layer_output
         """
-        if not self.batch_first:
-            input_tensor.permute(1, 0, 2, 3, 4)
 
-        if hidden_state is not None:
-            raise NotImplementedError()
+        if hidden_state[0] is not None and hidden_state[1] is not None:
+            h_state_list, c_state_list = hidden_state
         else:
-            hidden_state = self._init_hidden(batch_size=input_tensor.size(0))
+            h_state_list, c_state_list = self._init_hidden(batch_size=input_tensor.size(0))
 
-        layer_output_list = []
-        last_state_list = []
+        h_list = []
+        c_list = []
 
-        seq_len = input_tensor.size(1)
         cur_layer_input = input_tensor
 
         for layer_idx in range(self.num_layers):
+            hidden = (h_state_list[layer_idx], c_state_list[layer_idx])
+            out, (h, c) = self.cell_list[layer_idx](input_tensor=cur_layer_input,
+                                                    cur_state=hidden)
+            h_list.append(h)
+            c_list.append(c)
 
-            h, c = hidden_state[layer_idx]
-            output_inner = []
-            for t in range(seq_len):
-                h, c = self.cell_list[layer_idx](input_tensor=cur_layer_input[:, t, :, :, :],
-                                                 cur_state=[h, c])
-                output_inner.append(h)
+            cur_layer_input = h
 
-            layer_output = torch.stack(output_inner, dim=1)
-            cur_layer_input = layer_output
-
-            layer_output_list.append(layer_output)
-            last_state_list.append([h, c])
-
-        if not self.return_all_layers:
-            layer_output_list = layer_output_list[-1:]
-            last_state_list = last_state_list[-1:]
-
-        return layer_output_list, last_state_list
+        return out, (h_list, c_list)
 
     def _init_hidden(self, batch_size):
-        init_states = []
+        h_list = []
+        c_list = []
         for i in range(self.num_layers):
-            init_states.append(self.cell_list[i].init_hidden(batch_size))
-        return init_states
+            h, c = self.cell_list[i].init_hidden(batch_size)
+            h_list.append(h)
+            c_list.append(c)
+        return (h_list, c_list)
 
     @staticmethod
     def _check_kernel_size_consistency(kernel_size):
         if not (isinstance(kernel_size, tuple) or
-                    (isinstance(kernel_size, list) and all([isinstance(elem, tuple) for elem in kernel_size]))):
+                (isinstance(kernel_size, list) and all([isinstance(elem, tuple) for elem in kernel_size]))):
             raise ValueError('`kernel_size` must be tuple or list of tuples')
 
     @staticmethod
@@ -187,8 +177,12 @@ if __name__ == '__main__':
     c = 3
     h = 25
     w = 25
-    net = ConvLSTM(input_size=(h, w), input_dim=c, hidden_dim=[16, 32, 5], kernel_size=(3,3), num_layers=3,
-                   batch_first=True, bias=True, return_all_layers=False)
-    x = torch.randn((B, T, c, h, w))
+    L_seq = 2
+    net = ConvLSTM2d(input_size=(h, w), input_dim=c, hidden_dim=[16, 32, 5], kernel_size=(3, 3), num_layers=3,
+                     bias=True)
+    x = torch.randn((B, c, h, w))
     print(x.shape)
-    print(net(x)[0][0].shape)
+    H = C = None
+    for i in range(L_seq):
+        y, (H, C) = net(x, (H, C))
+        print(i, y.shape, len(H), len(C))
