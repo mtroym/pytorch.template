@@ -22,11 +22,9 @@ class BiConvLSTM2d(nn.Module):
         Whether the data is (B, T, C, H, W) or (T, B, C, H, W)
     @bias: bool
         Whether there is a bias term
-    @return_all_layers: bool
     """
 
-    def __init__(self, input_size, input_dim, hidden_dim, kernel_size, num_layers,
-                 bias=True, return_all_layers=False):
+    def __init__(self, input_size, input_dim, hidden_dim, kernel_size, num_layers, bias=True):
         super(BiConvLSTM2d, self).__init__()
 
         self._check_kernel_size_consistency(kernel_size)
@@ -43,7 +41,6 @@ class BiConvLSTM2d(nn.Module):
         self.kernel_size = kernel_size
         self.num_layers = num_layers
         self.bias = bias
-        self.return_all_layers = return_all_layers
 
         input_dim_list = [self.input_dim] + self.hidden_dim
         cell_list_fw = [tl.ConvLSTM2dCell(input_size=(self.height, self.width),
@@ -65,19 +62,23 @@ class BiConvLSTM2d(nn.Module):
         Parameters
         ----------
         input_tensor:
-            5-D Tensor of shape (b, c, h, w)
+            5-D Tensor of shape (2 * b, c, h, w)
         hidden_state: optional
             4-D Tensor either of shape (b, C, k_s, k_s)
 
-        Returns
+        Returns:         output, (h_list, c_list)
         -------
-        last_state_list, layer_output
+        output:
+            output tensor. (b, OC, h, w)
+        h_list:
+            list of hidden Tensor of len num_layers
+        c_list:
+            list of hidden Tensor of len num_layers
         """
-
         if hidden_state[0] is not None and hidden_state[1] is not None:
             h_state_list, c_state_list = hidden_state
         else:
-            h_state_list, c_state_list = self._init_hidden(batch_size=input_tensor.size(0))
+            h_state_list, c_state_list = self._init_hidden(batch_size=int(input_tensor.size(0)/2))
 
         layer_output_list_fw = []
         layer_output_list_bw = []
@@ -85,17 +86,12 @@ class BiConvLSTM2d(nn.Module):
         h_list = []
         c_list = []
 
-        cur_layer_input_fw = input_tensor
-        cur_layer_input_bw = input_tensor
-        # todo
+        cur_layer_input_fw, cur_layer_input_bw = input_tensor.chunk(2, dim=0)
         for layer_idx in range(self.num_layers):
-            (h_fw, h_bw) = h_state_list[layer_idx]
-            (c_fw, c_bw) = c_state_list[layer_idx]
             cur_layer_input_fw, (h_fw, c_fw) = self.cell_list_fw[layer_idx](input_tensor=cur_layer_input_fw,
-                                                                            cur_state=[h_fw, c_fw])
+                                                                            cur_state=h_state_list[layer_idx])
             cur_layer_input_bw, (h_bw, c_bw) = self.cell_list_bw[layer_idx](input_tensor=cur_layer_input_bw,
-                                                                            cur_state=[h_bw, c_bw])
-
+                                                                            cur_state=c_state_list[layer_idx])
             layer_output_fw = h_fw
             layer_output_bw = h_bw
 
@@ -106,7 +102,6 @@ class BiConvLSTM2d(nn.Module):
 
         combined = torch.cat((h_fw, h_bw), dim=1)
         output = self.combined_conv(combined)
-
         return output, (h_list, c_list)
 
     def _init_hidden(self, batch_size):
@@ -139,13 +134,14 @@ if __name__ == '__main__':
     h = 25
     w = 25
     L_seq = 60
-    net = BiConvLSTM2d(input_size=(h, w), input_dim=c, hidden_dim=[16, 32, 5], kernel_size=(3, 3), num_layers=3,
-                       bias=True, return_all_layers=False)
+    net = BiConvLSTM2d(input_size=(h, w), input_dim=c, hidden_dim=[16, 32, 5], kernel_size=(3, 3), num_layers=3, bias=True)
     x = torch.randn((B, c, h, w))
-    print(x.shape)
+    x_r = torch.randn((B, c, h, w))
+    X = torch.cat((x, x_r), dim=0)
+    print(X.shape)
     H = C = None
     for i in range(L_seq):
-        y, (H, C) = net(x, (H, C))
+        y, (H, C) = net(X, (H, C))
         print(i, y.shape, len(H), len(C))
 
     # net = nn.LSTM(input_size=h, hidden_size=10)

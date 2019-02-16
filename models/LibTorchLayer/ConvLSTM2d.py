@@ -78,8 +78,6 @@ class ConvLSTM2d(nn.Module):
         Whether the data is (B, T, C, H, W) or (T, B, C, H, W)
     @bias: bool
         Whether there is a bias term
-    @return_all_layers: bool
-
     """
 
     def __init__(self, input_size, input_dim, hidden_dim, kernel_size, num_layers,
