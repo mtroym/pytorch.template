@@ -11,7 +11,7 @@ pytorch1.0.0 training framework - in progress
 - [x] srcnn - Super Resolution task.
 - [x] deeplab v3+ - Object Segmentation task
 - [ ] CRF/MRF - post  processing for object segmentation task.
-
+- [ ] Bi-AtrousLSTM (Bi-Directional Atrous LSTM//cascaded LSTM)
 ## datasets.
 - [x] CelebA - face dataset
 - [x] VOCParts - detection dataset
