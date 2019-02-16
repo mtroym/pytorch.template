@@ -78,7 +78,7 @@ class BiConvLSTM2d(nn.Module):
         if hidden_state[0] is not None and hidden_state[1] is not None:
             h_state_list, c_state_list = hidden_state
         else:
-            h_state_list, c_state_list = self._init_hidden(batch_size=int(input_tensor.size(0)/2))
+            h_state_list, c_state_list = self._init_hidden(batch_size=int(input_tensor.size(0) / 2))
 
         layer_output_list_fw = []
         layer_output_list_bw = []
@@ -134,7 +134,8 @@ if __name__ == '__main__':
     h = 25
     w = 25
     L_seq = 60
-    net = BiConvLSTM2d(input_size=(h, w), input_dim=c, hidden_dim=[16, 32, 5], kernel_size=(3, 3), num_layers=3, bias=True)
+    net = BiConvLSTM2d(input_size=(h, w), input_dim=c, hidden_dim=[16, 32, 5], kernel_size=(3, 3), num_layers=3,
+                       bias=True)
     x = torch.randn((B, c, h, w))
     x_r = torch.randn((B, c, h, w))
     X = torch.cat((x, x_r), dim=0)

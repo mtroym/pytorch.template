@@ -175,7 +175,7 @@ if __name__ == '__main__':
     c = 3
     h = 25
     w = 25
-    L_seq = 2
+    L_seq = 10
     net = ConvLSTM2d(input_size=(h, w), input_dim=c, hidden_dim=[16, 32, 5], kernel_size=(3, 3), num_layers=3,
                      bias=True)
     x = torch.randn((B, c, h, w))
