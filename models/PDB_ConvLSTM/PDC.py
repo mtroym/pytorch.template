@@ -15,7 +15,7 @@ class PDC(nn.Module):
         self.at_pool2 = tl.SeparableConv2d(inplane, outplane, kernel_size=(3, 3), dilation=4, bn=True)
         self.at_pool3 = tl.SeparableConv2d(inplane, outplane, kernel_size=(3, 3), dilation=8, bn=True)
         self.at_pool4 = tl.SeparableConv2d(inplane, outplane, kernel_size=(3, 3), dilation=16, bn=True)
-
+        # TODO: cat.
 
     def forward(self, x):
         """

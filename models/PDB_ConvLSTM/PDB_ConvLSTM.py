@@ -40,6 +40,7 @@ class PDB_ConvLSTM(nn.Module):
         out_1, hfw1, hbw1 = self.x1DBconvLSTM(out)
         out_2, hfw2, hbw2 = self.x2DBconvLSTM(out)
         out = torch.cat((out_1, out_2), dim=2)
+        # todo: cat conv.
         print(out.shape)
         return out
 
