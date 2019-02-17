@@ -1,11 +1,11 @@
 import torch
 import torch.nn as nn
 from torch.autograd import Variable
-
+from models.LibTorchLayer.SeparableConv2d import SeparableConv2d
 
 class ConvLSTM2dCell(nn.Module):
 
-    def __init__(self, input_size, input_dim, hidden_dim, kernel_size, bias):
+    def __init__(self, input_size, input_dim, hidden_dim, kernel_size, bias, dilation=1):
         """
         Initialize ConvLSTM cell.
 
@@ -32,15 +32,19 @@ class ConvLSTM2dCell(nn.Module):
         self.kernel_size = kernel_size
         self.padding = kernel_size[0] // 2, kernel_size[1] // 2
         self.bias = bias
+        self.dilation = dilation
 
-        self.conv = nn.Sequential(nn.Conv2d(in_channels=self.input_dim + self.hidden_dim,
-                                            out_channels=4 * self.hidden_dim,
-                                            kernel_size=self.kernel_size,
-                                            padding=self.padding,
-                                            bias=self.bias))
+        self.conv = SeparableConv2d(inplanes=self.input_dim + self.hidden_dim,planes=4 * self.hidden_dim,kernel_size=self.kernel_size,dilation=self.dilation,bias=self.bias)
+        # self.conv = nn.Sequential(nn.Conv2d(in_channels=self.input_dim + self.hidden_dim,
+        #                                     out_channels=4 * self.hidden_dim,
+        #                                     kernel_size=self.kernel_size,
+        #                                     padding=self.padding,
+        #                                     dilation=self.dilation,
+        #                                     bias=self.bias))
 
     def forward(self, input_tensor, cur_state):
         h_cur, c_cur = cur_state
+        # print(h_cur.shape, input_tensor.shape, self.input_dim, self.hidden_dim)
         # cat input and hidden state.
         combined = torch.cat([input_tensor, h_cur], dim=1)
         # use a big convolutional layer to filter.
