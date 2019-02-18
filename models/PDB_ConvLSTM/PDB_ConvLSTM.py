@@ -40,27 +40,26 @@ class PDB_ConvLSTM(nn.Module):
             out_temp.append(self.backbone(x[:, t, :, :, :])[0])
         out = torch.stack(out_temp, dim=1)
 
-        print(out.shape)
+        print("Output shape after feature extraction:", out.shape)
         out = self.PDC(out)
-        print(out.shape)
+        print("Output shape after PDC module:", out.shape)
 
         out_temp = []
         for t in range(seq_Len):
             out_temp.append(self.catconv(out[:, t, :, :, :]))
         out = torch.stack(out_temp, dim=1)
-        print(out.shape)
+        print("Output shape after concatenate conv:", out.shape)
 
         out_1 = self.x1DBconvLSTM(out)
         out_2 = self.x2DBconvLSTM(out)
         out = torch.cat((out_1, out_2), dim=2)
-
+        print("Output shape after DB-ConvLSTM:", out.shape)
         out_temp = []
         for t in range(seq_Len):
             out_temp.append(
                 f.interpolate(torch.sigmoid(self.combine_conv(out[:, t, :, :, :])), self.inputsize, mode='bilinear',
                               align_corners=True))
         out = torch.stack(out_temp, dim=1)
-
         return out
 
 

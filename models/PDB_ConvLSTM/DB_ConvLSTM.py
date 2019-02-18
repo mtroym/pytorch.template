@@ -1,6 +1,6 @@
 import torch
 import torch.nn as nn
-import torch.nn.functional as f
+
 import models.LibTorchLayer as tl
 
 
@@ -79,14 +79,11 @@ class DB_ConvLSTM_seq(nn.Module):
 
         fw_layer_out = torch.stack(out_fw_list, dim=1)
         # bw pass
-        print(fw_layer_out.shape)
         for t in range(seq_len):
             out_bw, hidden_bw = self.cell_bw(input_tensor=fw_layer_out[:, seq_len - 1 - t, :, :, :],
                                              cur_state=hidden_bw)
             out_bw_list.append(out_bw)
         bw_layer_out = torch.stack(out_bw_list, dim=1)
-        print(bw_layer_out.shape)
-
         cat_out = torch.cat((fw_layer_out, bw_layer_out), dim=2)
         temp_out = []
         for t in range(seq_len):

@@ -4,14 +4,14 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torch.utils.data
 from torch.autograd import Variable
-
+import criterions.LovaszSoftmax as L
 
 def initCriterion(criterion, model):
     pass
 
 
 def createCriterion(opt, model):
-    criterion = nn.NLLLoss2d()
+    criterion = lambda x, y: L.xloss(x,y,ignore=0)
     return criterion
 
 
@@ -32,7 +32,7 @@ def createMetrics(opt, model):
 class BCELoss2d(nn.Module):
     def __init__(self, weight=None, reduction='mean'):
         super(BCELoss2d, self).__init__()
-        self.bce_loss = nn.BCELoss(weight, reduction='mean')
+        self.bce_loss = nn.BCELoss(weight, reduction=reduction)
 
     def forward(self, logits, targets):
         probs = F.softmax(logits)

@@ -34,19 +34,19 @@ class DeepLab(nn.Module):
 
 
 def createModel(opt):
-    model = DeepLab(opt.inputSize, backbone='Xception', outstride=16, classes=opt.numClasses)
+    model = DeepLab(input_dim=opt.input_dim, inputsize=opt.inputSize, backbone='Xception', outstride=8, classes=opt.numClasses)
     if opt.GPU:
         model = model.cuda()
     return model
-
 
 refers_to = "https://github.com/bonlime/keras-deeplab-v3-plus/blob/master/model.py"
 
 if __name__ == '__main__':
     inputsize = (200, 200)
-    batch = 1
+    batch = 32
     C = 1
-    a = DeepLab(input_dim=C, inputsize=inputsize, backbone='Xception', outstride=16, classes=5)
+    net = DeepLab(input_dim=C, inputsize=inputsize, backbone='Xception', outstride=16, classes=5)
     x = torch.randn((batch, C, *inputsize))
-    print(a(x).shape)
+    print("input shape", x.shape)
+    print("output shape", net(x).shape)
     # print(299.0 / 2 / 2 / 2 / 2)
