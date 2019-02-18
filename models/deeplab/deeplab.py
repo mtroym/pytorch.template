@@ -10,10 +10,11 @@ BACKBONE = {'Xception': Xception}
 
 
 class DeepLab(nn.Module):
-    def __init__(self, inputsize, backbone, outstride, classes):
+    def __init__(self, input_dim, inputsize, backbone, outstride, classes):
         super(DeepLab, self).__init__()
+        self.input_dim = input_dim
         if backbone == 'Xception':
-            self.backbone = BACKBONE[backbone](outstride=outstride)
+            self.backbone = BACKBONE[backbone](input_dim = self.input_dim, outstride=outstride)
         self.x4size = (int(np.ceil(inputsize[0] / 4)), int(np.ceil(inputsize[1] / 4)))
         self.xoutsize = (int(np.ceil(inputsize[0] / outstride)), int(np.ceil(inputsize[1] / outstride)))
         self.ASPP = ASPP(2048, 256, size=self.xoutsize)
@@ -44,7 +45,8 @@ refers_to = "https://github.com/bonlime/keras-deeplab-v3-plus/blob/master/model.
 if __name__ == '__main__':
     inputsize = (200, 200)
     batch = 1
-    a = DeepLab(inputsize=inputsize, backbone='Xception', outstride=16, classes=5)
-    x = torch.randn((batch, 1, *inputsize))
+    C = 1
+    a = DeepLab(input_dim=C, inputsize=inputsize, backbone='Xception', outstride=16, classes=5)
+    x = torch.randn((batch, C, *inputsize))
     print(a(x).shape)
     # print(299.0 / 2 / 2 / 2 / 2)

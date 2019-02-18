@@ -128,7 +128,7 @@ class Xception_exit_flow(nn.Module):
 
 
 class Xception(nn.Module):
-    def __init__(self, outstride=None):
+    def __init__(self, input_dim, outstride=None):
         super(Xception, self).__init__()
         # entry_flow_conv
         config_16 = {
@@ -151,8 +151,8 @@ class Xception(nn.Module):
             config = config_default
         else:
             config = configs[int(log(outstride) / log(2)) - 3]
-
-        self.entry = Xception_entry_flow(1, 728, last_stride=config['entry_last_stride'])
+        self.input_dim = input_dim
+        self.entry = Xception_entry_flow(input_dim, 728, last_stride=config['entry_last_stride'])
         self.middle = Xception_middle_flow(728, 8, dilation=config['middle_dilation'])
         self.exit = Xception_exit_flow(728, 1024, 2048, dilations=config['exit_dilation'])
         # in

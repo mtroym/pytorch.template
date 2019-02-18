@@ -1,10 +1,11 @@
 import torch
 import torch.nn as nn
-
+import torch.nn.functional as f
 import models.LibTorchLayer as tl
 
+
 class DB_ConvLSTM_seq(nn.Module):
-    def __init__(self, input_size, input_dim, hidden_dim, out_dim, kernel_size,
+    def __init__(self, input_size, input_dim, hidden_dim, kernel_size,
                  dilation=1, bias=True, return_time=True, batch_first=True):
         super(DB_ConvLSTM_seq, self).__init__()
         self._check_kernel_size_consistency(kernel_size)
@@ -15,7 +16,6 @@ class DB_ConvLSTM_seq(nn.Module):
             raise ValueError('Inconsistent list length.')
 
         self.height, self.width = input_size
-        self.out_dim = out_dim
         self.input_dim = input_dim
         self.hidden_dim = hidden_dim
         self.kernel_size = kernel_size
@@ -37,9 +37,9 @@ class DB_ConvLSTM_seq(nn.Module):
                                          kernel_size=self.kernel_size[1],
                                          bias=self.bias)
         self.combined_conv = tl.SeparableConv2d(inplanes=self.hidden_dim[0] + self.hidden_dim[1],
-                                                planes=self.out_dim,
-                                                kernel_size=self.kernel_size[1],
-                                                dilation=self.dilation,
+                                                planes=self.hidden_dim[-1],
+                                                kernel_size=(3, 3),
+                                                dilation=1,
                                                 bias=self.bias)
 
     def forward(self, input_tensor, hidden_state=None):
@@ -71,7 +71,6 @@ class DB_ConvLSTM_seq(nn.Module):
         seq_len = input_tensor.size(1)
         out_fw_list = []
         out_bw_list = []
-        out_cb_list = []
         # fw pass
         for t in range(seq_len):
             out_fw, hidden_fw = self.cell_fw(input_tensor=input_tensor[:, t, :, :, :],
@@ -88,14 +87,12 @@ class DB_ConvLSTM_seq(nn.Module):
         bw_layer_out = torch.stack(out_bw_list, dim=1)
         print(bw_layer_out.shape)
 
+        cat_out = torch.cat((fw_layer_out, bw_layer_out), dim=2)
+        temp_out = []
         for t in range(seq_len):
-            into_cb = torch.cat((out_fw_list[t], out_bw_list[t]), dim=1)
-            out_cb = self.combined_conv(into_cb)
-            out_cb_list.append(out_cb)
-
-        combined_out = torch.stack(out_cb_list, dim=1)
-
-        return combined_out, fw_layer_out, bw_layer_out
+            temp_out.append(torch.tanh(self.combined_conv(cat_out[:, t, :, :, :])))
+        out = torch.stack(temp_out, dim=1)
+        return out
 
     def _init_hidden(self, batch_size):
         init_states = ((self.cell_fw.init_hidden(batch_size), self.cell_bw.init_hidden(batch_size)))
@@ -118,13 +115,13 @@ if __name__ == '__main__':
     T = 3
     B = 5
     c = 2048
-    h = 2
-    w = 2
-    net = DB_ConvLSTM_seq(input_size=(h, w), input_dim=c, out_dim=256, hidden_dim=[16, 7], kernel_size=(3, 3), bias=True,
+    h = 60
+    w = 60
+    net = DB_ConvLSTM_seq(input_size=(h, w), input_dim=c, hidden_dim=[16, 7], kernel_size=(3, 3), bias=True,
                           batch_first=True, dilation=2)
     x = torch.randn((B, T, c, h, w))
     print(type(x))
-    y, inner_fw, inner_bw = net(x)
+    y = net(x)
     print(y.shape)
 
     # net = nn.LSTM(input_size=h, hidden_size=10)

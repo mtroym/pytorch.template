@@ -10,7 +10,6 @@ class PDC(nn.Module):
     def __init__(self, inplane, outplane, size=None):
         super(PDC, self).__init__()
         self.size = size
-        self.at_pool0 = tl.SeparableConv2d(inplane, outplane, kernel_size=(3, 3), dilation=1, bn=True)
         self.at_pool1 = tl.SeparableConv2d(inplane, outplane, kernel_size=(3, 3), dilation=2, bn=True)
         self.at_pool2 = tl.SeparableConv2d(inplane, outplane, kernel_size=(3, 3), dilation=4, bn=True)
         self.at_pool3 = tl.SeparableConv2d(inplane, outplane, kernel_size=(3, 3), dilation=8, bn=True)
@@ -34,12 +33,11 @@ class PDC(nn.Module):
         :param x: (B, C, H, W)
         :return: (B, CC, H, W)
         """
-        x3 = self.at_pool0(x)
         x3_conv_0 = self.at_pool1(x)
         x3_conv_1 = self.at_pool2(x)
         x3_conv_2 = self.at_pool3(x)
         x3_conv_3 = self.at_pool4(x)
-        at_all = torch.cat((x3, x3_conv_0, x3_conv_1, x3_conv_2, x3_conv_3), 1)
+        at_all = torch.cat((x, x3_conv_0, x3_conv_1, x3_conv_2, x3_conv_3), 1)
         out = F.interpolate(at_all, self.size, mode='bilinear', align_corners=True)
         return out
 
