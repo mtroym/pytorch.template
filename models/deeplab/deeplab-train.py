@@ -56,7 +56,7 @@ class Trainer:
             self.optimizer.step()
             # LOG ===
             runTime = time.time() - start
-            avgLoss.update(float(loss))
+            avgLoss.update(float(torch.mean(loss)))
             logAcc = []
             a = b = None
             if len(self.metrics) != 0:
