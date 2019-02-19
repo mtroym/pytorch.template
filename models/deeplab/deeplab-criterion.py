@@ -13,7 +13,7 @@ def initCriterion(criterion, model):
 
 
 def createCriterion(opt, model):
-    criterion = Criterion(ignore=0)
+    criterion = nn.CrossEntropyLoss()
     return criterion
 
 
