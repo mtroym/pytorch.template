@@ -92,7 +92,7 @@ class Trainer:
             if self.opt.debug and i > 10:  # check debug.
                 break
             start = time.time()
-            inputV, targetV = Variable(input), Variable(target)
+            inputV, targetV = Variable(input), Variable(target[:, 0, :, :])
             if self.opt.GPU:
                 inputV, targetV = inputV.cuda(), targetV.cuda()
 
@@ -101,16 +101,18 @@ class Trainer:
 
             output = self.model(inputV)
             output = torch.softmax(output, dim=1)
-            loss = self.criterion(output, targetV.long()[:, 0, :, :])
 
-            # LOG ===
-            runTime = time.time() - start
-
-            runningLoss = float(torch.mean(loss))
-            avgLoss.update(runningLoss)
-            logAcc = []
             a = output.data.cpu().numpy()
             b = targetV.data.cpu().numpy()
+            loss = self.criterion(a, b)
+            # LOG ===
+            runTime = time.time() - start
+            if torch.isnan(loss):
+                runningLoss = 1.0
+            else:
+                runningLoss = float(torch.mean(loss))
+            avgLoss.update(runningLoss)
+            logAcc = []
             for metric in self.metrics:
                 avgAcces[metric].update(self.metrics[metric](a, b))
                 logAcc.append((metric, float(avgAcces[metric]())))
