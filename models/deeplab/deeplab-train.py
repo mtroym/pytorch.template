@@ -101,7 +101,7 @@ class Trainer:
             output = self.model(inputV)
             output = torch.softmax(output, dim=1)
 
-            loss = self.criterion(output, targetV)
+            loss = self.criterion(output, targetV.long())
             # LOG ===
             runTime = time.time() - start
             runningLoss = float(torch.mean(loss))
