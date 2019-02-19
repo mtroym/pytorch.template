@@ -6,7 +6,7 @@ echo "\$THIS_DIR = ${THIS_DIR}
 echo "copying data to the lab cluster..."
 mkdir /opt/tiger/data/
 cp /mnt/cephfs/lab/tony/segTHOR.tar /opt/tiger/data/
-echo "modified. -> /mnt/cephfs/lab/tony/cnnface.tar \$THIS_DIR"
+echo "modified. -> /mnt/cephfs/lab/tony/datasets/cnnface.tar \$THIS_DIR"
 echo "
 decompressing data ..."
 #echo "modified. -> tar -xf cnnface.tar"
