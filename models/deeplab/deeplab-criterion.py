@@ -4,14 +4,16 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torch.utils.data
 from torch.autograd import Variable
+
 import criterions.LovaszSoftmax as L
+
 
 def initCriterion(criterion, model):
     pass
 
 
 def createCriterion(opt, model):
-    criterion = lambda x, y: L.xloss(x,y,ignore=0)
+    criterion = lambda x, y: L.lovasz_softmax(x, y, ignore=0)
     return criterion
 
 

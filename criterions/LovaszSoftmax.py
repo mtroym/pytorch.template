@@ -166,6 +166,7 @@ def lovasz_softmax(probas, labels, only_present=False, per_image=False, ignore=N
             lovasz_softmax_flat(*flatten_probas(prob.unsqueeze(0), lab.unsqueeze(0), ignore), only_present=only_present)
             for prob, lab in zip(probas, labels))
     else:
+        print('to flat')
         loss = lovasz_softmax_flat(*flatten_probas(probas, labels, ignore), only_present=only_present)
     return loss
 
@@ -181,10 +182,9 @@ def lovasz_softmax_flat(probas, labels, only_present=False):
         # only void pixels, the gradients should be 0
         return probas * 0.
     C = probas.size(1)
-
-    C = probas.size(1)
     losses = []
     for c in range(C):
+        print('c = ', c)
         fg = (labels == c).float()  # foreground for class c
         if only_present and fg.sum() == 0:
             continue
@@ -193,6 +193,7 @@ def lovasz_softmax_flat(probas, labels, only_present=False):
         perm = perm.data
         fg_sorted = fg[perm]
         losses.append(torch.dot(errors_sorted, Variable(lovasz_grad(fg_sorted))))
+    print('ok', mean(losses))
     return mean(losses)
 
 
@@ -200,6 +201,7 @@ def flatten_probas(probas, labels, ignore=None):
     """
     Flattens predictions in the batch
     """
+    print('flaten the pridictions')
     B, C, H, W = probas.size()
     probas = probas.permute(0, 2, 3, 1).contiguous().view(-1, C)  # B * H * W, C = P, C
     labels = labels.view(-1)
@@ -242,3 +244,8 @@ def mean(l, ignore_nan=True, empty=0):
     if n == 1:
         return acc
     return acc / n
+
+
+
+if __name__ == '__main__':
+    tar = torch.randn([1, 1, 512, 512])

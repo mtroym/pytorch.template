@@ -42,8 +42,8 @@ def createModel(opt):
 refers_to = "https://github.com/bonlime/keras-deeplab-v3-plus/blob/master/model.py"
 
 if __name__ == '__main__':
-    inputsize = (200, 200)
-    batch = 32
+    inputsize = (512, 512)
+    batch = 1
     C = 1
     net = DeepLab(input_dim=C, inputsize=inputsize, backbone='Xception', outstride=16, classes=5)
     x = torch.randn((batch, C, *inputsize))

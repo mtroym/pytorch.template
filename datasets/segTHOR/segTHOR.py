@@ -81,4 +81,5 @@ def getInstance(info, opt, split):
     myInstance = SegTHOR(info, opt, split)
     # print(myInstance.inputSize)
     opt.inputSize = myInstance.inputSize
+    opt.input_dim = myInstance.input_dim
     return myInstance

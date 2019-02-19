@@ -1,4 +1,5 @@
 import os
+import torch
 import torch.nn as nn
 import torch.optim as optim
 from torch.autograd import Variable
@@ -35,29 +36,31 @@ class Trainer:
         for metric in self.metrics:
             avgAcces[metric] = RunningAverage()
         self.progbar = progbar(len(trainLoader), width=self.opt.barwidth)
+        print('\tbegin!')
         for i, (input, target) in enumerate(trainLoader):
             if self.opt.debug and i > 10:  # check debug.
                 break
+            print(i, input.shape, target.shape)
             start = time.time()
-            inputV, targetV= Variable(input), Variable(target)
+            inputV, target= Variable(input), target[:, 0, :, :]
             if self.opt.GPU:
-                inputV, targetV = inputV.cuda(), targetV.cuda()
+                inputV = inputV.cuda()
 
             self.optimizer.zero_grad()
             dataTime = time.time() - start
-
             output = self.model(inputV)
-            output = nn.LogSoftmax()(output)
-            loss = self.criterion(output, targetV.long()[:, 0, :, :])
+            print(output.shape)
+            output = torch.softmax(output, dim=1)
+            loss = self.criterion(output, target.long())
+            print(loss)
             loss.backward()
             self.optimizer.step()
-
             # LOG ===
             runTime = time.time() - start
             avgLoss.update(float(loss))
             logAcc = []
             a = output.data.cpu().numpy()
-            b = targetV.data.cpu().numpy()
+            b = target
             for metric in self.metrics:
                 avgAcces[metric].update(self.metrics[metric](a, b))
                 logAcc.append((metric, float(avgAcces[metric]())))
@@ -95,7 +98,7 @@ class Trainer:
             dataTime = time.time() - start
 
             output = self.model(inputV)
-            output = nn.LogSoftmax()(output)
+            output = torch.softmax(output, dim=1)
             loss = self.criterion(output, targetV.long()[:, 0, :, :])
 
             # LOG ===
