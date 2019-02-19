@@ -1,6 +1,6 @@
 import os
 import time
-
+import numpy as np
 import torch
 import torch.optim as optim
 from torch.autograd import Variable
@@ -92,6 +92,7 @@ class Trainer:
             if self.opt.debug and i > 10:  # check debug.
                 break
             start = time.time()
+            print(np.any(np.isnan(input)) , np.any(np.isnan(target)))
             inputV, targetV = Variable(input), Variable(target[:, 0, :, :])
             if self.opt.GPU:
                 inputV, targetV = inputV.cuda(), targetV.cuda()
