@@ -104,7 +104,7 @@ class Trainer:
 
             # LOG ===
             runTime = time.time() - start
-            avgLoss.update(float(loss))
+            avgLoss.update(float(torch.mean(loss)))
             logAcc = []
             a = output.data.cpu().numpy()
             b = targetV.data.cpu().numpy()
