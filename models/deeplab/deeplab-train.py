@@ -107,6 +107,7 @@ class Trainer:
             loss = self.criterion(a, b)
             # LOG ===
             runTime = time.time() - start
+            print(loss)
             if torch.isnan(loss):
                 runningLoss = 1.0
             else:
