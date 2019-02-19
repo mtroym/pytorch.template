@@ -42,25 +42,26 @@ class Trainer:
                 break
             print(i, input.shape, target.shape)
             start = time.time()
-            inputV, target= Variable(input), target[:, 0, :, :]
+            inputV, targetV= Variable(input), Variable(target[:, 0, :, :])
             if self.opt.GPU:
                 inputV = inputV.cuda()
+                targetV = targetV.cuda()
 
             self.optimizer.zero_grad()
             dataTime = time.time() - start
             output = self.model(inputV)
-            print(output.shape)
             output = torch.softmax(output, dim=1)
-            loss = self.criterion(output, target.long())
-            print(loss)
+            loss = self.criterion(output, targetV.long())
             loss.backward()
             self.optimizer.step()
             # LOG ===
             runTime = time.time() - start
             avgLoss.update(float(loss))
             logAcc = []
-            a = output.data.cpu().numpy()
-            b = target
+            a = b = None
+            if len(self.metrics) != 0:
+                a = output.data.cpu().numpy()
+                b = target.data.cpu().numpy()
             for metric in self.metrics:
                 avgAcces[metric].update(self.metrics[metric](a, b))
                 logAcc.append((metric, float(avgAcces[metric]())))
