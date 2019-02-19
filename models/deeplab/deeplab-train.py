@@ -1,11 +1,12 @@
 import os
+import time
+
 import torch
-import torch.nn as nn
 import torch.optim as optim
 from torch.autograd import Variable
-from util.utils import RunningAverage
+
 from util.progbar import progbar
-import time
+from util.utils import RunningAverage
 
 
 class Trainer:
@@ -36,13 +37,11 @@ class Trainer:
         for metric in self.metrics:
             avgAcces[metric] = RunningAverage()
         self.progbar = progbar(len(trainLoader), width=self.opt.barwidth)
-        print('\tbegin!')
         for i, (input, target) in enumerate(trainLoader):
             if self.opt.debug and i > 10:  # check debug.
                 break
-            print(i, input.shape, target.shape)
             start = time.time()
-            inputV, targetV= Variable(input), Variable(target[:, 0, :, :])
+            inputV, targetV = Variable(input), Variable(target[:, 0, :, :])
             if self.opt.GPU:
                 inputV = inputV.cuda()
                 targetV = targetV.cuda()
@@ -56,7 +55,9 @@ class Trainer:
             self.optimizer.step()
             # LOG ===
             runTime = time.time() - start
-            avgLoss.update(float(torch.mean(loss)))
+            runingLoss = float(torch.mean(loss))
+
+            avgLoss.update(runingLoss)
             logAcc = []
             a = b = None
             if len(self.metrics) != 0:
@@ -66,9 +67,9 @@ class Trainer:
                 avgAcces[metric].update(self.metrics[metric](a, b))
                 logAcc.append((metric, float(avgAcces[metric]())))
             del a, b
-            log = updateLog(epoch, i, len(trainLoader), runTime, dataTime, float(loss), avgAcces)
+            log = updateLog(epoch, i, len(trainLoader), runTime, dataTime, runingLoss, avgAcces)
             self.logger['train'].write(log)
-            self.progbar.update(i, [('Time', runTime), ('loss', float(loss)), *logAcc])
+            self.progbar.update(i, [('Time', runTime), ('loss', runingLoss), *logAcc])
             # END LOG ===
 
         log = '\n* Finished training epoch # %d  Loss: %1.4f  ' % (epoch, avgLoss())
@@ -91,7 +92,7 @@ class Trainer:
             if self.opt.debug and i > 10:  # check debug.
                 break
             start = time.time()
-            inputV, targetV= Variable(input), Variable(target)
+            inputV, targetV = Variable(input), Variable(target)
             if self.opt.GPU:
                 inputV, targetV = inputV.cuda(), targetV.cuda()
 
@@ -104,7 +105,9 @@ class Trainer:
 
             # LOG ===
             runTime = time.time() - start
-            avgLoss.update(float(torch.mean(loss)))
+
+            runningLoss = float(torch.mean(loss))
+            avgLoss.update(runningLoss)
             logAcc = []
             a = output.data.cpu().numpy()
             b = targetV.data.cpu().numpy()
@@ -112,9 +115,9 @@ class Trainer:
                 avgAcces[metric].update(self.metrics[metric](a, b))
                 logAcc.append((metric, float(avgAcces[metric]())))
             del a, b
-            log = updateLog(epoch, i, len(trainLoader), runTime, dataTime, float(loss), avgAcces)
+            log = updateLog(epoch, i, len(trainLoader), runTime, dataTime, runningLoss, avgAcces)
             self.logger['val'].write(log)
-            self.progbar.update(i, [('Time', runTime), ('loss', float(loss)), *logAcc])
+            self.progbar.update(i, [('Time', runTime), ('loss', runningLoss), *logAcc])
             # END LOG ===
 
         log = '\n* Finished test epoch # %d  Loss: %1.4f ' % (epoch, avgLoss())
@@ -125,20 +128,21 @@ class Trainer:
         print(log)
         return avgLoss()
 
-
     def LRDecay(self, epoch):
-        self.scheduler = optim.lr_scheduler.ExponentialLR(self.optimizer, gamma=0.95, last_epoch=epoch-2)
+        self.scheduler = optim.lr_scheduler.ExponentialLR(self.optimizer, gamma=0.95, last_epoch=epoch - 2)
 
     def LRDecayStep(self):
         self.scheduler.step()
 
-def updateLog(epoch, i, length ,time, datatime, err, Acc):
+
+def updateLog(epoch, i, length, time, datatime, err, Acc):
     log = 'Epoch: [%d][%d/%d] Time %1.3f Data %1.3f Err %1.4f   ' % (
-            epoch, i, length, time, datatime, err)
+        epoch, i, length, time, datatime, err)
     for metric in Acc:
         log += metric + " %1.4f  " % Acc[metric]()
     log += '\n'
     return log
+
 
 def createTrainer(model, criterion, metric, opt, optimState):
     return Trainer(model, criterion, metric, opt, optimState)
