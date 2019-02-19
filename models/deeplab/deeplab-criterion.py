@@ -13,8 +13,20 @@ def initCriterion(criterion, model):
 
 
 def createCriterion(opt, model):
-    criterion = lambda x, y: L.lovasz_softmax(x, y, ignore=0)
+    criterion = Criterion(ignore=0)
     return criterion
+
+
+class Criterion(nn.Module):
+    def __init__(self, ignore=None):
+        super(Criterion).__init__()
+        self.criterion = lambda x, y: L.lovasz_softmax(x, y, ignore=ignore)
+
+    def forward(self, x, y):
+        return  self.criterion(x, y)
+
+
+
 
 
 METRICS = {
