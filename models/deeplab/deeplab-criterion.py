@@ -19,7 +19,7 @@ def createCriterion(opt, model):
 
 class Criterion(nn.Module):
     def __init__(self, ignore=None):
-        super(Criterion).__init__()
+        super(Criterion, self).__init__()
         self.criterion = lambda x, y: L.lovasz_softmax(x, y, ignore=ignore)
 
     def forward(self, x, y):
