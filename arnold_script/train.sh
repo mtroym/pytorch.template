@@ -10,7 +10,7 @@ echo "modified. -> /mnt/cephfs/lab/tony/datasets/cnnface.tar \$THIS_DIR"
 echo "
 decompressing data ..."
 #echo "modified. -> tar -xf cnnface.tar"
-cd /opt/tiger/data/
+cd /opt/tiger/data/segTHOR/train/
 tar -xf segTHOR.tar
 cd $THIS_DIR
 cd ..
