@@ -27,9 +27,9 @@ class Criterion(nn.Module):
 
 
 
-
-
 METRICS = {
+    'mIoU': lambda preds, labels: np.mean(L.iou(preds, labels, 4, ignore=0, per_image=False)),
+    'IoUs': lambda preds, labels: str(L.iou(preds, labels, 4, ignore=0, per_image=False))
 }
 
 
@@ -37,7 +37,7 @@ def createMetrics(opt, model):
     print("=> create metrics: ", end="")
     metrics = {}
     for metric in opt.metrics:
-        print(metric, end=" ,")
+        print(metric, end=", ")
         metrics[metric] = METRICS[metric]
     print()
     return metrics
