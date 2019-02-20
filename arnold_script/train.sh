@@ -4,7 +4,7 @@ cd $THIS_DIR # To run on Arnold
 echo "\$THIS_DIR = ${THIS_DIR}
 "
 echo "copying data to the lab cluster..."
-mkdir /opt/tiger/data/segTHOR/train/
+mkdir -pv /opt/tiger/data/segTHOR/train/
 cp /mnt/cephfs/lab/tony/datasets/segTHOR/train/segTHOR.tar /opt/tiger/data/segTHOR/train/
 echo "modified. -> /mnt/cephfs/lab/tony/datasets/cnnface.tar \$THIS_DIR"
 echo "
