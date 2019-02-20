@@ -5,10 +5,10 @@ Maxim Berman 2018 ESAT-PSI KU Leuven (MIT License)
 
 from __future__ import print_function, division
 
-import torch
-from torch.autograd import Variable
-import torch.nn.functional as F
 import numpy as np
+import torch
+import torch.nn.functional as F
+from torch.autograd import Variable
 
 try:
     from itertools import ifilterfalse
@@ -25,7 +25,7 @@ def lovasz_grad(gt_sorted):
     gts = gt_sorted.sum()
     intersection = gts - gt_sorted.float().cumsum(0)
     union = gts + (1 - gt_sorted).float().cumsum(0)
-    jaccard = 1. - intersection / (union + 1e-7)
+    jaccard = 1. - intersection / union
     if p > 1:  # cover 1-pixel case
         jaccard[1:p] = jaccard[1:p] - jaccard[0:-1]
     return jaccard
@@ -45,7 +45,7 @@ def iou_binary(preds, labels, EMPTY=1., ignore=None, per_image=True):
         if not union:
             iou = EMPTY
         else:
-            iou = float(intersection) / ( float(union) + 1e-7)
+            iou = float(intersection) / float(union)
         ious.append(iou)
     iou = mean(ious)  # mean accross images if per_image
     return 100 * iou
@@ -67,7 +67,7 @@ def iou(preds, labels, C, EMPTY=1., ignore=None, per_image=False):
                 if not union:
                     iou.append(EMPTY * 100)
                 else:
-                    iou.append(float(intersection) / (float(union) + 1e-7)* 100.0)
+                    iou.append(float(intersection) / float(union) * 100.0)
         ious.append(iou)
     ious = tuple(map(float, map(mean, zip(*ious))))  # mean accross images if per_image)
     return np.array(ious)
@@ -239,9 +239,4 @@ def mean(l, ignore_nan=True, empty=0):
         acc += v
     if n == 1:
         return acc
-    return acc / (n + 1e-7)
-
-
-
-if __name__ == '__main__':
-    tar = torch.randn([1, 1, 512, 512])
+    return acc / n

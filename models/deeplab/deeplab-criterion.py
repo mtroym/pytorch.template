@@ -23,13 +23,12 @@ class Criterion(nn.Module):
         self.criterion = lambda x, y: L.lovasz_softmax(x, y, ignore=ignore)
 
     def forward(self, x, y):
-        return  self.criterion(x, y)
-
+        return self.criterion(x, y)
 
 
 METRICS = {
-    'mIoU': lambda preds, labels: np.mean(L.iou(preds, labels, 4, ignore=0, per_image=False)),
-    'IoUs': lambda preds, labels: str(L.iou(preds, labels, 4, ignore=0, per_image=False))
+    'mIoU': lambda preds, labels: np.mean(L.iou(preds, labels, 4, EMPTY=0.0, ignore=0, per_image=False)),
+    'IoUs': lambda preds, labels: np.array(L.iou(preds, labels, 4, EMPTY=0.0, ignore=0, per_image=False))
 }
 
 

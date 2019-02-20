@@ -51,6 +51,7 @@ class Trainer:
             output = self.model(inputV)
             output = torch.softmax(output, dim=1)
             loss = self.criterion(output, targetV.long())
+            preds = torch.argmax(output, dim=1)
             loss.backward()
             self.optimizer.step()
             # LOG ===
@@ -59,14 +60,9 @@ class Trainer:
 
             avgLoss.update(runningLoss)
             logAcc = []
-            a = b = None
-            if len(self.metrics) != 0:
-                a = output.data.cpu().numpy()
-                b = target.data.cpu().numpy()
             for metric in self.metrics:
-                avgAcces[metric].update(self.metrics[metric](a, b))
+                avgAcces[metric].update(self.metrics[metric](preds, targetV))
                 logAcc.append((metric, float(avgAcces[metric]())))
-            del a, b
             log = updateLog(epoch, i, len(trainLoader), runTime, dataTime, runningLoss, avgAcces)
             self.logger['train'].write(log)
             self.progbar.update(i, [('Time', runTime), ('loss', runningLoss), *logAcc])
@@ -102,14 +98,16 @@ class Trainer:
             output = torch.softmax(output, dim=1)
 
             loss = self.criterion(output, targetV.long())
+            preds = torch.argmax(output, 1)
+            print(preds.shape)
             # LOG ===
             runTime = time.time() - start
             runningLoss = float(torch.mean(loss))
             avgLoss.update(runningLoss)
             logAcc = []
-            # for metric in self.metrics:
-            #     avgAcces[metric].update(self.metrics[metric](a, b))
-            #     logAcc.append((metric, float(avgAcces[metric]())))
+            for metric in self.metrics:
+                avgAcces[metric].update(self.metrics[metric](preds, targetV))
+                logAcc.append((metric, avgAcces[metric]()))
             log = updateLog(epoch, i, len(trainLoader), runTime, dataTime, runningLoss, avgAcces)
             self.logger['val'].write(log)
             self.progbar.update(i, [('Time', runTime), ('loss', runningLoss), *logAcc])
