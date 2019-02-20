@@ -15,6 +15,7 @@ class SegTHOR(Dataset):
         self.inputSize = np.load(self.pathData[0])[0].shape[1:]
         self.input_dim = np.load(self.pathData[0])[0].shape[0]
         print(self.inputSize)
+
     def __getitem__(self, index):
         image, target = np.load(self.pathData[index])
         image = torch.from_numpy(image).float()
