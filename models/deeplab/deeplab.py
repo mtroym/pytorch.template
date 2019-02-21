@@ -29,7 +29,6 @@ class DeepLab(nn.Module):
         input = self.ASPP(input)
         decode_aspp = F.interpolate(input, self.x4size, mode='bilinear', align_corners=True)
         decode_feat = self.x4conv(low_level_feat)
-        print(decode_feat.shape, decode_aspp.shape)
         decode_in = torch.cat((decode_aspp, decode_feat), 1)
         out = self.decoder_conv(decode_in)
         out = F.interpolate(out, self.inputsize, mode='bilinear', align_corners=True)
