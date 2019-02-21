@@ -32,28 +32,34 @@ class Trainer:
     def train(self, trainLoader, epoch):
         self.model.train()
         print("=> Training epoch")
+
+        # =====
         avgLoss = RunningAverage()
         avgAcces = {}
         for metric in self.metrics:
             avgAcces[metric] = RunningAverage()
         self.progbar = progbar(len(trainLoader), width=self.opt.barwidth)
+        # =====
+
         for i, (input, target) in enumerate(trainLoader):
             if self.opt.debug and i > 10:  # check debug.
                 break
             start = time.time()
+
             inputV, targetV = Variable(input), Variable(target[:, 0, :, :])
             if self.opt.GPU:
                 inputV = inputV.cuda()
                 targetV = targetV.cuda()
 
-            self.optimizer.zero_grad()
-            dataTime = time.time() - start
             output = self.model(inputV)
             output = torch.softmax(output, dim=1)
             loss = self.criterion(output, targetV.long())
-            preds = torch.argmax(output, dim=1)
+
+            self.optimizer.zero_grad()
             loss.backward()
+            preds = torch.argmax(output, dim=1)
             self.optimizer.step()
+
             # LOG ===
             runTime = time.time() - start
             runningLoss = float(torch.mean(loss))
@@ -63,7 +69,7 @@ class Trainer:
             for metric in self.metrics:
                 avgAcces[metric].update(self.metrics[metric](preds, targetV))
                 logAcc.append((metric, float(avgAcces[metric]())))
-            log = updateLog(epoch, i, len(trainLoader), runTime, dataTime, runningLoss, avgAcces)
+            log = updateLog(epoch, i, len(trainLoader), runTime, runningLoss, avgAcces)
             self.logger['train'].write(log)
             self.progbar.update(i, [('Time', runTime), ('loss', runningLoss), *logAcc])
             # END LOG ===
@@ -88,18 +94,15 @@ class Trainer:
             if self.opt.debug and i > 10:  # check debug.
                 break
             start = time.time()
-            inputV, targetV = input, target[:, 0, :, :]
+            inputV, targetV = Variable(input, volatile=True), Variable(target[:, 0, :, :], volatile=True)
             if self.opt.GPU:
                 inputV, targetV = inputV.cuda(), targetV.cuda()
-
-            dataTime = time.time() - start
 
             output = self.model(inputV)
             output = torch.softmax(output, dim=1)
 
             loss = self.criterion(output, targetV.long())
             preds = torch.argmax(output, 1)
-            print(preds.shape)
             # LOG ===
             runTime = time.time() - start
             runningLoss = float(torch.mean(loss))
@@ -108,7 +111,7 @@ class Trainer:
             for metric in self.metrics:
                 avgAcces[metric].update(self.metrics[metric](preds, targetV))
                 logAcc.append((metric, avgAcces[metric]()))
-            log = updateLog(epoch, i, len(trainLoader), runTime, dataTime, runningLoss, avgAcces)
+            log = updateLog(epoch, i, len(trainLoader), runTime, runningLoss, avgAcces)
             self.logger['val'].write(log)
             self.progbar.update(i, [('Time', runTime), ('loss', runningLoss), *logAcc])
             # END LOG ===
@@ -128,9 +131,9 @@ class Trainer:
         self.scheduler.step()
 
 
-def updateLog(epoch, i, length, time, datatime, err, Acc):
-    log = 'Epoch: [%d][%d/%d] Time %1.3f Data %1.3f Err %1.4f   ' % (
-        epoch, i, length, time, datatime, err)
+def updateLog(epoch, i, length, time, err, Acc):
+    log = 'Epoch: [%d][%d/%d] Time %1.3f Err %1.4f   ' % (
+        epoch, i, length, time, err)
     for metric in Acc:
         log += metric + " %1.4f  " % Acc[metric]()
     log += '\n'
