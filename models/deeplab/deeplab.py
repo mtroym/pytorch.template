@@ -128,7 +128,7 @@ def deeplab_v3_50(class_number=5, fine_tune=True):
 
 
 def createModel(opt):
-    model = Deeplab_v3(class_number=opt.numClasses + 1, fine_tune=False)
+    model = Deeplab_v3(class_number=opt.numClasses, fine_tune=False)
     # model = DeepLab(input_dim=opt.input_dim, inputsize=opt.inputSize, backbone='Xception', outstride=8,
     #                 classes=opt.numClasses)
     if opt.GPU:

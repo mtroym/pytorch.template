@@ -57,7 +57,7 @@ class Trainer:
 
             self.optimizer.zero_grad()
             loss.backward()
-            preds = torch.argmax(output, dim=1)
+            _, preds = torch.max(output, 1)
             self.optimizer.step()
 
             # LOG ===
@@ -102,7 +102,7 @@ class Trainer:
             output = torch.softmax(output, dim=1)
 
             loss = self.criterion(output, targetV.long())
-            preds = torch.argmax(output, 1)
+            _, preds = torch.max(output, 1)
             # LOG ===
             runTime = time.time() - start
             runningLoss = float(torch.mean(loss))
