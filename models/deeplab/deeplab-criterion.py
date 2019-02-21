@@ -13,7 +13,7 @@ def initCriterion(criterion, model):
 
 
 def createCriterion(opt, model):
-    criterion = Criterion(ignore=None)
+    criterion = Criterion(ignore=0)
     return criterion
 
 
