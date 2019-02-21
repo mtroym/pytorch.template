@@ -61,5 +61,6 @@ for epoch in range(startEpoch, opt.nEpochs + 1):
 
     checkpoints.save(epoch, trainer.model, criterion, metric, trainer.optimizer, bestModel, testLoss, opt)
 
-print(' * Finished Err: \033[1;36m%1.4f\033[0m * ' % bestLoss)
-exit(-1)
+print(' * Finished Err: %1.4f * ' % bestLoss)
+# for debug!
+raise NotImplementedError()

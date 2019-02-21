@@ -26,6 +26,12 @@ class Criterion(nn.Module):
         return self.criterion(x, y)
 
 
+def mIoU(preds, labels, ignore=0):
+    print(preds)
+    ious = L.iou(preds, labels, 4, EMPTY=0.0, ignore=ignore, per_image=False)
+    print(ious)
+    return np.mean(ious)
+
 METRICS = {
     'mIoU': lambda preds, labels: np.mean(L.iou(preds, labels, 4, EMPTY=0.0, ignore=0, per_image=False)),
     'IoUs': lambda preds, labels: np.array(L.iou(preds, labels, 4, EMPTY=0.0, ignore=0, per_image=False))
