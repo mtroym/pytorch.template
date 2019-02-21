@@ -79,7 +79,8 @@ class Deeplab_v3(nn.Module):
     def __init__(self, class_number=5, fine_tune=True):
         super().__init__()
         encoder = torchvision.models.resnet50(pretrained=fine_tune)
-        self.start = nn.Sequential(encoder.conv1, encoder.bn1,
+        self.startConv = nn.Conv2d(1, 64, 7)
+        self.start = nn.Sequential(self.startConv, encoder.bn1,
                                    encoder.relu)
 
         self.maxpool = encoder.maxpool
