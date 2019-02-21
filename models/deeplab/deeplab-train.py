@@ -1,6 +1,6 @@
 import os
 import time
-import numpy as np
+
 import torch
 import torch.optim as optim
 from torch.autograd import Variable
@@ -46,13 +46,18 @@ class Trainer:
                 break
             start = time.time()
 
-            inputV, targetV = Variable(input), Variable(target[:, 0, :, :])
+            inputV, targetV = Variable(input), Variable(target)
             if self.opt.GPU:
                 inputV = inputV.cuda()
                 targetV = targetV.cuda()
 
             output = self.model(inputV)
             output = torch.softmax(output, dim=1)
+
+            _reshape = output.shape[2]*output.shape[3]
+
+            output.view(*output.shape[:2], _reshape)
+            targetV.view(targetV.shape[0], _reshape)
             loss = self.criterion(output, targetV.long())
 
             self.optimizer.zero_grad()
@@ -94,7 +99,7 @@ class Trainer:
             if self.opt.debug and i > 10:  # check debug.
                 break
             start = time.time()
-            inputV, targetV = Variable(input, volatile=True), Variable(target[:, 0, :, :], volatile=True)
+            inputV, targetV = Variable(input, volatile=True), Variable(target, volatile=True)
             if self.opt.GPU:
                 inputV, targetV = inputV.cuda(), targetV.cuda()
 

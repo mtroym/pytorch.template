@@ -1,9 +1,7 @@
-import cv2
+import nibabel as nib
 import numpy as np
 import torch
 from torch.utils.data import Dataset
-
-import datasets.transforms as t
 
 
 class SegTHOR(Dataset):
@@ -12,70 +10,36 @@ class SegTHOR(Dataset):
         self.split = split
         self.dir = imageInfo['basedir']
         self.pathData = imageInfo[split]
-        self.inputSize = np.load(self.pathData[0])[0].shape[1:]
-        self.input_dim = np.load(self.pathData[0])[0].shape[0]
-        print(self.inputSize)
+        self.inputSize = (252, 316)
+        self.input_dim = 3
+        self.boundary = [161, 413, 85, 401]  # (252, 316)
+        self.mean, self.std = 0.456, 0.224
 
     def __getitem__(self, index):
-        image, target = np.load(self.pathData[index])
-        image = torch.from_numpy(image).float()
-        target = torch.from_numpy(target).float()
+        (pid, sid),gtp, p = self.pathData[index]
+        img = nib.load(p).get_fdata()[:, :, sid]
+        GT = nib.load(gtp).get_data()[:, :, sid]
+        img, GT = self._transform(img, GT)
+        img_ = np.array([img, img, img])
+        image = torch.from_numpy(img_).float()
+        target = torch.from_numpy(GT)
         return image, target
 
     def __len__(self):
         return len(self.pathData)
 
-    def preprocess(self, im):
-        mean = torch.Tensor([0.485, 0.456, 0.406])
-        std = torch.Tensor([0.229, 0.224, 0.225])
-        im = cv2.resize(im, (self.opt.imgDim, self.opt.imgDim))
-        im = np.asarray(im)
-        im = t.normalize(im, mean, std)
-        im = np.transpose(im, (2, 0, 1))
-        return im
+    def _transform(self, img, mask, low_range=-200, high_range=200, ):
+        # thershold [-200, 200] -> normalize -> crop
+        _img = img.copy()
+        _img[img > high_range] = high_range
+        _img[img < low_range] = low_range
 
-    def preprocessTarget(self, t, w, h):
-        x_min = t[0] / float(h)
-        y_min = t[1] / float(w)
-        x_max = t[2] / float(h)
-        y_max = t[3] / float(w)
-        x_mid = (x_min + x_max) / 2
-        y_mid = (y_min + y_max) / 2
-        x_delta = np.log(x_max - x_min)
-        y_delta = np.log(y_max - y_min)
-        return np.array([x_mid, y_mid, x_delta, y_delta])
+        _img /= 255.0
+        _img -= self.mean
+        _img /= self.std
 
-    def postprocess(self):
-        def process(im):
-            mean = torch.Tensor([0.485, 0.456, 0.406])
-            std = torch.Tensor([0.229, 0.224, 0.225])
-            im = np.transpose(im, (1, 2, 0))
-            im = t.unNormalize(im, mean, std)
-            return im
-
-        return process
-
-    def postprocessTarget(self):
-        def process(t):
-            x_mid = t[0] * self.opt.imgDim
-            y_mid = t[1] * self.opt.imgDim
-            x_delta = np.exp(t[2]) * self.opt.imgDim
-            y_delta = np.exp(t[3]) * self.opt.imgDim
-            x_min = x_mid - x_delta / 2
-            y_min = y_mid - y_delta / 2
-            x_max = x_mid + x_delta / 2
-            y_max = y_mid + y_delta / 2
-            return np.array([x_min, y_min, x_max, y_max])
-
-        return process
-
-    def postprocessHeat(self):
-        def process(im):
-            im = np.transpose(im, (1, 2, 0))
-            im *= 255
-            return im
-
-        return process
+        top, bottom, left, right = self.boundary
+        return _img[top:bottom, left:right], mask[top:bottom, left:right]
 
 
 def getInstance(info, opt, split):

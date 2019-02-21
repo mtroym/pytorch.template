@@ -29,13 +29,14 @@ class DeepLab(nn.Module):
         input = self.ASPP(input)
         decode_aspp = F.interpolate(input, self.x4size, mode='bilinear', align_corners=True)
         decode_feat = self.x4conv(low_level_feat)
+        print(decode_feat.shape, decode_aspp.shape)
         decode_in = torch.cat((decode_aspp, decode_feat), 1)
         out = self.decoder_conv(decode_in)
         out = F.interpolate(out, self.inputsize, mode='bilinear', align_corners=True)
         return out
 
 
-class ASPP(nn.Module):
+class _ASPP(nn.Module):
     # have bias and relu, no bn
     def __init__(self, in_channel=512, depth=256):
         super().__init__()
@@ -79,8 +80,8 @@ class Deeplab_v3(nn.Module):
     def __init__(self, class_number=5, fine_tune=True):
         super().__init__()
         encoder = torchvision.models.resnet50(pretrained=fine_tune)
-        self.startConv = nn.Conv2d(1, 64, 7)
-        self.start = nn.Sequential(self.startConv, encoder.bn1,
+        # self.startConv = nn.Conv2d(1, 64, 7)
+        self.start = nn.Sequential(encoder.conv1, encoder.bn1,
                                    encoder.relu)
 
         self.maxpool = encoder.maxpool
@@ -91,7 +92,7 @@ class Deeplab_v3(nn.Module):
         self.layer3 = encoder.layer3  # 1024
         self.layer4 = encoder.layer4  # 2048
 
-        self.aspp = ASPP(in_channel=2048, depth=256)
+        self.aspp = _ASPP(in_channel=2048, depth=256)
 
         self.conv_cat = nn.Sequential(nn.Conv2d(256 + 48, 256, 3, 1, padding=1), nn.ReLU(inplace=True))
         self.conv_cat1 = nn.Sequential(nn.Conv2d(256, 256, 3, 1, padding=1), nn.ReLU(inplace=True))
@@ -128,9 +129,9 @@ def deeplab_v3_50(class_number=5, fine_tune=True):
 
 
 def createModel(opt):
-    model = Deeplab_v3(class_number=opt.numClasses, fine_tune=False)
-    # model = DeepLab(input_dim=opt.input_dim, inputsize=opt.inputSize, backbone='Xception', outstride=8,
-    #                 classes=opt.numClasses)
+    # model = Deeplab_v3(class_number=opt.numClasses, fine_tune=False)
+    model = DeepLab(input_dim=opt.input_dim, inputsize=opt.inputSize, backbone='Xception', outstride=8,
+                    classes=opt.numClasses)
     if opt.GPU:
         model = model.cuda()
     return model

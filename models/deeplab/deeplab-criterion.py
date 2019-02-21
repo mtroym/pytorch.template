@@ -13,14 +13,16 @@ def initCriterion(criterion, model):
 
 
 def createCriterion(opt, model):
-    criterion = nn.CrossEntropyLoss()
+    criterion = Criterion(ignore=None)
     return criterion
 
 
 class Criterion(nn.Module):
     def __init__(self, ignore=None):
         super(Criterion, self).__init__()
-        self.criterion = lambda x, y: L.lovasz_softmax(x, y, ignore=ignore)
+        # self.criterion = lambda x, y: L.lovasz_softmax(x, y, ignore=ignore)
+        ignore = -100 if ignore is None else ignore
+        self.criterion = nn.CrossEntropyLoss(ignore_index=ignore)
 
     def forward(self, x, y):
         return self.criterion(x, y)
@@ -28,8 +30,8 @@ class Criterion(nn.Module):
 
 def mIoU(preds, labels, ignore=0):
     ious = L.iou(preds, labels, 5, EMPTY=0.0, ignore=ignore, per_image=False)
-    print(ious)
     return np.mean(ious)
+
 
 METRICS = {
     'mIoU': lambda preds, labels: mIoU(preds, labels),
