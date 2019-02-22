@@ -37,6 +37,7 @@ def load(opt):
 
 
 def save(epoch, model, criterion, metrics, optimizer, bestModel, loss, opt):
+    print('=> Saving checkpoints...')
     if isinstance(model, nn.DataParallel):
         model = model.get(0)
     # TODO

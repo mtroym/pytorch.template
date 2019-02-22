@@ -36,7 +36,7 @@ class Trainer:
         # =====
         avgLoss = RunningAverage()
         avgAcces = {}
-        for metric in self.metrics:
+        for metric in self.metrics.name:
             avgAcces[metric] = RunningAverage()
         self.progbar = progbar(len(trainLoader), width=self.opt.barwidth)
         # =====
@@ -71,7 +71,7 @@ class Trainer:
 
             avgLoss.update(runningLoss)
             logAcc = []
-            for metric in self.metrics:
+            for metric in self.metrics.name:
                 avgAcces[metric].update(self.metrics[metric](preds, targetV))
                 logAcc.append((metric, float(avgAcces[metric]())))
             log = updateLog(epoch, i, len(trainLoader), runTime, runningLoss, avgAcces)
@@ -92,7 +92,7 @@ class Trainer:
         print("=> Validating epoch")
         avgLoss = RunningAverage()
         avgAcces = {}
-        for metric in self.metrics:
+        for metric in self.metrics.name:
             avgAcces[metric] = RunningAverage()
         self.progbar = progbar(len(trainLoader), width=self.opt.barwidth)
         for i, (input, target) in enumerate(trainLoader):
@@ -113,7 +113,7 @@ class Trainer:
             runningLoss = float(torch.mean(loss))
             avgLoss.update(runningLoss)
             logAcc = []
-            for metric in self.metrics:
+            for metric in self.metrics.name:
                 avgAcces[metric].update(self.metrics[metric](preds, targetV))
                 logAcc.append((metric, avgAcces[metric]()))
             log = updateLog(epoch, i, len(trainLoader), runTime, runningLoss, avgAcces)

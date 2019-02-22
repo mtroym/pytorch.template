@@ -18,5 +18,8 @@ def setup(opt, checkpoint, model):
         metrics = criterionHandler.createMetrics(opt, model)
     if opt.GPU:
         criterion = criterion.cuda()
-
+        try:
+            metrics = metrics.cuda()
+        except:
+            pass
     return criterion, metrics
