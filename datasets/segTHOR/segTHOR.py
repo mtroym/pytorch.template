@@ -16,7 +16,7 @@ class SegTHOR(Dataset):
         self.mean, self.std = 0.456, 0.224
 
     def __getitem__(self, index):
-        (pid, sid),gtp, p = self.pathData[index]
+        (pid, sid), gtp, p = self.pathData[index]
         img = nib.load(p).get_fdata()[:, :, sid]
         GT = nib.load(gtp).get_data()[:, :, sid]
         img, GT = self._transform(img, GT)

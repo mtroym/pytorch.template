@@ -135,6 +135,7 @@ def createModel(opt):
         model = model.cuda()
     return model
 
+
 # https://github.com/gengyanlei/deeplab_v3/edit/master/deeplab_v3_50.py
 refers_to = "https://github.com/bonlime/keras-deeplab-v3-plus/blob/master/model.py"
 
@@ -146,4 +147,3 @@ if __name__ == '__main__':
     x = torch.randn((batch, C, *inputsize))
     print("input shape", x.shape)
     print("output shape", net(x).shape)
-    # print(299.0 / 2 / 2 / 2 / 2)
