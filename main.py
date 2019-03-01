@@ -52,8 +52,7 @@ for epoch in range(startEpoch, opt.nEpochs + 1):
 
     trainLoss = trainer.train(trainLoader, epoch)
     testLoss = trainer.test(valLoader, epoch)
-    bb.writer.add_scalar('scalar/train', {'TrainLoss': trainLoss}, epoch)
-    bb.writer.add_scalar('scalar/val', {'ValLoss': testLoss}, epoch)
+    bb.writer.add_scalars('scalar/Loss', {'TrainLoss': trainLoss, 'ValLoss': testLoss}, epoch)
     bestModel = False
     if testLoss < bestLoss:
         bestModel = True

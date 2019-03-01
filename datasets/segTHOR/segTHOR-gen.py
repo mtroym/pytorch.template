@@ -38,6 +38,8 @@ def loadPaths(opt, base, pa, split):
         img_path = os.path.join(base, patients, patients + '.nii.gz')
         img = nib.load(img_path).get_data()
         for i in range(img.shape[2]):
+            if (np.sum(img[:,:,i]) == 0 and split == 'train'):
+                continue
             X.append(((patients, i), GT_path, img_path))
         bar.update(idx + 1)
     return X
