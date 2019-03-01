@@ -59,7 +59,7 @@ class _ASPP(nn.Module):
 
         image_features = self.mean(x)
         image_features = self.conv(image_features)
-        image_features = F.upsample(image_features, size=size, mode='bilinear', align_corners=True)
+        image_features = F.interpolate(image_features, size=size, mode='bilinear', align_corners=True)
 
         atrous_block1 = self.atrous_block1(x)
 
@@ -111,13 +111,13 @@ class Deeplab_v3(nn.Module):
 
         low_feature = self.low_feature(xm)
         size2 = low_feature.shape[2:]
-        decoder_feature = F.upsample(x, size=size2, mode='bilinear', align_corners=True)
+        decoder_feature = F.interpolate(x, size=size2, mode='bilinear', align_corners=True)
 
         conv_cat = self.conv_cat(torch.cat([low_feature, decoder_feature], dim=1))
         conv_cat1 = self.conv_cat1(conv_cat)
         conv_cat2 = self.conv_cat2(conv_cat1)
         score_small = self.score(conv_cat2)
-        score = F.upsample(score_small, size=size1, mode='bilinear', align_corners=True)
+        score = F.interpolate(score_small, size=size1, mode='bilinear', align_corners=True)
 
         return score
 
@@ -128,9 +128,9 @@ def deeplab_v3_50(class_number=5, fine_tune=True):
 
 
 def createModel(opt):
-    # model = Deeplab_v3(class_number=opt.numClasses, fine_tune=False)
-    model = DeepLab(input_dim=opt.input_dim, inputsize=opt.inputSize, backbone='Xception', outstride=8,
-                    classes=opt.numClasses)
+    model = Deeplab_v3(class_number=opt.numClasses, fine_tune=False)
+    # model = DeepLab(input_dim=opt.input_dim, inputsize=opt.inputSize, backbone='Xception', outstride=8,
+    #                 classes=opt.numClasses)
     if opt.GPU:
         model = model.cuda()
     return model
