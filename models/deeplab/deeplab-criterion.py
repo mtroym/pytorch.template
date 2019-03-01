@@ -9,14 +9,13 @@ def initCriterion(criterion, model):
 
 
 def createCriterion(opt, model):
-    criterion = Criterion(ignore=0)
+    criterion = Criterion()
     return criterion
 
 
 class Criterion(nn.Module):
-    def __init__(self, ignore=None):
+    def __init__(self, ignore=-100):
         super(Criterion, self).__init__()
-        ignore = -100 if ignore is None else ignore
         self.criterion = nn.CrossEntropyLoss(ignore_index=ignore)
 
     def forward(self, x, y):
@@ -42,7 +41,7 @@ class mIoU(nn.Module):
 
 
 METRICS = {
-    'mIoU': mIoU(5, 0),
+    'mIoU': mIoU(5, ignore=0),
     'IoUs': lambda preds, labels: np.array(L.iou(preds, labels, 5, EMPTY=0.0, ignore=0, per_image=False))
 }
 
