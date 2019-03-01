@@ -3,7 +3,7 @@ import math
 import sys
 
 import opts
-
+from util.summaries import BoardX
 print("=> initializing. parsing arguments.")
 opt = opts.parse()
 
@@ -46,13 +46,14 @@ if checkpoint != None:
     print('Previous loss: \033[1;36m%1.4f\033[0m' % bestLoss)
 
 trainer.LRDecay(startEpoch)
-
+bb = BoardX(opt)
 for epoch in range(startEpoch, opt.nEpochs + 1):
     trainer.LRDecayStep()
 
     trainLoss = trainer.train(trainLoader, epoch)
     testLoss = trainer.test(valLoader, epoch)
-
+    bb.writer.add_scalar('scalar/train', {'TrainLoss': trainLoss}, epoch)
+    bb.writer.add_scalar('scalar/val', {'ValLoss': testLoss}, epoch)
     bestModel = False
     if testLoss < bestLoss:
         bestModel = True

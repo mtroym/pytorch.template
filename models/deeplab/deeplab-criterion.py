@@ -35,11 +35,6 @@ class mIoU(nn.Module):
                              per_image=self.per_image))
 
 
-# def mIoU(preds, labels, ignore=0):
-#     ious = L.iou(preds, labels, 5, EMPTY=0.0, ignore=ignore, per_image=False)
-#     return np.mean(ious)
-
-
 METRICS = {
     'mIoU': mIoU(5, ignore=0),
     'IoUs': lambda preds, labels: np.array(L.iou(preds, labels, 5, EMPTY=0.0, ignore=0, per_image=False))

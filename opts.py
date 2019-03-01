@@ -27,6 +27,7 @@ def parse():
     parser.add_argument('--trainPctg', default=0.95, type=float, help='Percentage of training images')
     parser.add_argument('--imgDim', default=224, type=int, help='Image dimension')
     # Training/testing options
+    parser.add_argument('--logDir', default='./log_dir', type=str, help='Tensorboard dir.')
     parser.add_argument('--nEpochs', default=100, type=int, help='Number of total epochs to run')
     parser.add_argument('--metrics', default='[PSNR, SSIM]', type=str2list, help='metrics in eval part')
     parser.add_argument('--epochNum', default=-1, type=int, help='0=retrain | -1=latest | -2=best', choices=[0, -1, -2])
