@@ -6,10 +6,10 @@ pytorch1.0.0 training framework - in progress
 - [x] Bi-Directional ConvLSTM
 
 ## models.
-- [x] Xception (Atrous Version)
-- [x] ASPP (Atrous Spatial Pyramids Pooling)
+- [x] ~~Xception (Atrous Version)~~ (Use other version. to make sure if it works.)
+- [x] ~~ASPP (Atrous Spatial Pyramids Pooling)~~
 - [x] srcnn - Super Resolution task.
-- [x] deeplab v3+ - Object Segmentation task
+- [x] ~~deeplab v3+ - Object Segmentation task~~
 - [ ] CRF/MRF - post  processing for object segmentation task.
 - [ ] Bi-AtrousLSTM (Bi-Directional Atrous LSTM//cascaded LSTM**)
 ## datasets.
@@ -20,5 +20,5 @@ pytorch1.0.0 training framework - in progress
 - [ ] DAVIS 2017 - video segmentation dataset
 
 ## eval metrics/criterion
-- [ ] mIoU
-- [ ] segTHOR's.
+- [x] mIoU - use LovaszSoftmax Package. // Forgotten the source
+- [x] segTHOR's. Hausdorff/ Dice from SimpleITK package. 
