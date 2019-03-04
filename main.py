@@ -49,10 +49,11 @@ trainer.LRDecay(startEpoch)
 bb = BoardX(opt)
 for epoch in range(startEpoch, opt.nEpochs + 1):
     trainer.LRDecayStep()
-
-    trainLoss = trainer.train(trainLoader, epoch)
-    testLoss = trainer.test(valLoader, epoch)
+    trainLoss, trainAcc = trainer.train(trainLoader, epoch)
+    testLoss, testAcc = trainer.test(valLoader, epoch)
     bb.writer.add_scalars('scalar/Loss', {'TrainLoss': trainLoss, 'ValLoss': testLoss}, epoch)
+    bb.writer.add_scalars('scalar/Acc', trainAcc.update(testAcc), epoch)
+    bb.writer.add_scalars('scalar/LR', {'LR', trainer.scheduler.lr }, epoch)
     bestModel = False
     if testLoss < bestLoss:
         bestModel = True

@@ -85,7 +85,7 @@ class Trainer:
         log += '\n'
         self.logger['train'].write(log)
         print(log)
-        return avgLoss()
+        return avgLoss(), {}
 
     def test(self, trainLoader, epoch):
         self.model.eval()
@@ -127,7 +127,7 @@ class Trainer:
         log += '\n'
         self.logger['val'].write(log)
         print(log)
-        return avgLoss()
+        return avgLoss(), {}
 
     def LRDecay(self, epoch):
         self.scheduler = optim.lr_scheduler.ExponentialLR(self.optimizer, gamma=0.95, last_epoch=epoch - 2)
