@@ -29,8 +29,6 @@ def exec(opt, cacheFilePath):
 def loadPaths(opt, base, pa, split):
     print('\t-> processing {} data'.format(split))
     X = []
-    if not os.path.exists(os.path.join(base, split)):
-        os.makedirs(os.path.join(base, split))
     bar = progbar(len(pa), width=opt.barwidth)
     for idx, patients in enumerate(pa):
         # file contains GT.nii // patient_xx.nii.gz
