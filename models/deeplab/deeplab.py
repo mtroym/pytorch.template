@@ -15,7 +15,7 @@ from models.deeplab.Decoder import build_decoder
 # import torch.nn.functional as F
 # import torchvision
 # from torch import nn
-BACKBONE = {'Xception': build_backbone('Xception', 16, 5)}
+BACKBONE = {'Xception': build_backbone('xception', 16, nn.BatchNorm2d)}
 
 SynchronizedBatchNorm2d = nn.BatchNorm2d
 
