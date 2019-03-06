@@ -62,21 +62,24 @@ class Trainer:
 
             self.optimizer.zero_grad()
             loss.backward()
+
+
             _, preds = torch.max(output, 1)
             self.optimizer.step()
 
             # LOG ===
             runTime = time.time() - start
-            runningLoss = float(torch.mean(loss))
-            if not runningLoss is np.nan:
-                avgLoss.update(runningLoss)
+            with torch.no_grad():
+                runningLoss = torch.mean(loss).data.cpu().numpy()
+            if not np.isnan(runningLoss):
+                avgLoss.update(float(runningLoss))
             logAcc = []
             for metric in self.metrics.name:
                 avgAcces[metric].update(self.metrics[metric](preds, targetV))
                 logAcc.append((metric, float(avgAcces[metric]())))
-            log = updateLog(epoch, i, len(trainLoader), runTime, runningLoss, avgAcces)
+            log = updateLog(epoch, i, len(trainLoader), runTime, avgLoss(), avgAcces)
             self.logger['train'].write(log)
-            self.progbar.update(i, [('Time', runTime), ('loss', runningLoss), *logAcc])
+            self.progbar.update(i, [('Time', runTime), ('loss', avgLoss()), *logAcc])
             # END LOG ===
 
         log = '\n* Finished training epoch # %d  Loss: %1.4f  ' % (epoch, avgLoss())
@@ -107,23 +110,24 @@ class Trainer:
             if self.opt.GPU:
                 inputV, targetV = inputV.cuda(), targetV.cuda()
 
-            output = self.model(inputV)
-            output = torch.softmax(output, dim=1)
+            with torch.no_grad():
+                output = self.model(inputV)
+                output = torch.softmax(output, dim=1)
 
-            loss = self.criterion(output, targetV.long())
+                loss = self.criterion(output, targetV.long())
             _, preds = torch.max(output, 1)
             # LOG ===
             runTime = time.time() - start
-            runningLoss = float(torch.mean(loss))
-            if not runningLoss is np.nan:
-                avgLoss.update(runningLoss)
+            runningLoss = torch.mean(loss).data.cpu().numpy()
+            if not np.isnan(runningLoss):
+                avgLoss.update(float(runningLoss))
             logAcc = []
             for metric in self.metrics.name:
                 avgAcces[metric].update(self.metrics[metric](preds, targetV))
                 logAcc.append((metric, avgAcces[metric]()))
-            log = updateLog(epoch, i, len(trainLoader), runTime, runningLoss, avgAcces)
+            log = updateLog(epoch, i, len(trainLoader), runTime, avgLoss(), avgAcces)
             self.logger['val'].write(log)
-            self.progbar.update(i, [('Time', runTime), ('loss', runningLoss), *logAcc])
+            self.progbar.update(i, [('Time', runTime), ('loss', avgLoss()), *logAcc])
             # END LOG ===
 
         log = '\n* Finished test epoch # %d  Loss: %1.4f ' % (epoch, avgLoss())
