@@ -7,7 +7,7 @@ from torch.autograd import Variable
 
 from util.progbar import progbar
 from util.utils import RunningAverage
-
+import numpy as np
 
 class Trainer:
     def __init__(self, model, criterion, metrics, opt, optimState):
@@ -68,8 +68,8 @@ class Trainer:
             # LOG ===
             runTime = time.time() - start
             runningLoss = float(torch.mean(loss))
-
-            avgLoss.update(runningLoss)
+            if not runningLoss is np.nan:
+                avgLoss.update(runningLoss)
             logAcc = []
             for metric in self.metrics.name:
                 avgAcces[metric].update(self.metrics[metric](preds, targetV))
@@ -115,7 +115,8 @@ class Trainer:
             # LOG ===
             runTime = time.time() - start
             runningLoss = float(torch.mean(loss))
-            avgLoss.update(runningLoss)
+            if not runningLoss is np.nan:
+                avgLoss.update(runningLoss)
             logAcc = []
             for metric in self.metrics.name:
                 avgAcces[metric].update(self.metrics[metric](preds, targetV))

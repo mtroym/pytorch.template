@@ -19,4 +19,4 @@ class RunningAverage():
         self.steps += 1
 
     def __call__(self):
-        return self.total / float(self.steps)
+        return self.total / (float(self.steps) + 1e-10)
