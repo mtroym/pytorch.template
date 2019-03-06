@@ -51,8 +51,14 @@ for epoch in range(startEpoch, opt.nEpochs + 1):
     trainer.LRDecayStep()
     trainLoss, trainAcc = trainer.train(trainLoader, epoch)
     testLoss, testAcc = trainer.test(valLoader, epoch)
+
+    allAcc = {}
+    for metric in trainAcc:
+        allAcc[metric + "_train"] = trainAcc[metric]
+        allAcc[metric + "_val"] = testAcc[metric]
+
     bb.writer.add_scalars('scalar/Loss', {'TrainLoss': trainLoss, 'ValLoss': testLoss}, epoch)
-    bb.writer.add_scalars('scalar/Acc', trainAcc.update(testAcc), epoch)
+    bb.writer.add_scalars('scalar/Acc', allAcc, epoch)
     bb.writer.add_scalars('scalar/LR', {'LR', trainer.scheduler.lr }, epoch)
     bestModel = False
     if testLoss < bestLoss:

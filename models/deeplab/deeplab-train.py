@@ -42,7 +42,7 @@ class Trainer:
         # =====
 
         for i, (input, target) in enumerate(trainLoader):
-            if self.opt.debug and i > 10:  # check debug.
+            if self.opt.debug and i > 1:  # check debug.
                 break
             start = time.time()
 
@@ -102,7 +102,7 @@ class Trainer:
             avgAcces[metric] = RunningAverage()
         self.progbar = progbar(len(trainLoader), width=self.opt.barwidth)
         for i, (input, target) in enumerate(trainLoader):
-            if self.opt.debug and i > 10:  # check debug.
+            if self.opt.debug and i > 1:  # check debug.
                 break
             start = time.time()
             with torch.no_grad():
