@@ -69,8 +69,7 @@ class Trainer:
 
             # LOG ===
             runTime = time.time() - start
-            with torch.no_grad():
-                runningLoss = torch.mean(loss).data.cpu().numpy()
+            runningLoss = torch.mean(loss).data.cpu().numpy()
             if not np.isnan(runningLoss):
                 avgLoss.update(float(runningLoss))
             logAcc = []
