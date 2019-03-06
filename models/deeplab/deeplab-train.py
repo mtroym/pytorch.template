@@ -99,7 +99,8 @@ class Trainer:
             if self.opt.debug and i > 10:  # check debug.
                 break
             start = time.time()
-            inputV, targetV = Variable(input, volatile=True), Variable(target, volatile=True)
+            with torch.no_grad():
+                inputV, targetV = Variable(input), Variable(target)
             if self.opt.GPU:
                 inputV, targetV = inputV.cuda(), targetV.cuda()
 
@@ -108,6 +109,7 @@ class Trainer:
 
             loss = self.criterion(output, targetV.long())
             _, preds = torch.max(output, 1)
+            print(torch.unique(preds))
             # LOG ===
             runTime = time.time() - start
             runningLoss = float(torch.mean(loss))
