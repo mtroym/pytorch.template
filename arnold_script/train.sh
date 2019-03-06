@@ -3,7 +3,9 @@ THIS_DIR="$( cd "$( dirname "$0" )" && pwd )"
 cd $THIS_DIR # To run on Arnold
 echo "\$THIS_DIR = ${THIS_DIR}
 "
-sudo cp /mnt/cephfs_wj/mlnlp/tony/pretrained/xception-b5690688.pth /root/.torch/models/
+
+sudo mkdir -p /root/.torch/models/
+sudo cp /mnt/cephfs_wj/mlnlp/tony/pretrained/xception-b5690688.pth /root/.torch/models/xception-b5690688.pth
 #echo "copying data to the lab cluster..."
 #mkdir /opt/tiger/data/
 #cp /mnt/cephfs/lab/tony/datasets/segTHOR.tar /opt/tiger/data/
