@@ -85,7 +85,10 @@ class Trainer:
         log += '\n'
         self.logger['train'].write(log)
         print(log)
-        return avgLoss(), {}
+        Accs = {}
+        for metric in self.metrics.name:
+            Accs[metric] = avgAcces[metric]()
+        return avgLoss(), Accs
 
     def test(self, trainLoader, epoch):
         self.model.eval()
@@ -109,7 +112,6 @@ class Trainer:
 
             loss = self.criterion(output, targetV.long())
             _, preds = torch.max(output, 1)
-            print(torch.unique(preds))
             # LOG ===
             runTime = time.time() - start
             runningLoss = float(torch.mean(loss))
@@ -129,7 +131,10 @@ class Trainer:
         log += '\n'
         self.logger['val'].write(log)
         print(log)
-        return avgLoss(), {}
+        Accs = {}
+        for metric in self.metrics.name:
+            Accs[metric] = avgAcces[metric]()
+        return avgLoss(), Accs
 
     def LRDecay(self, epoch):
         self.scheduler = optim.lr_scheduler.ExponentialLR(self.optimizer, gamma=0.95, last_epoch=epoch - 2)
