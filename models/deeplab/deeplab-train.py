@@ -61,7 +61,7 @@ class Trainer:
             loss = self.criterion(output, targetV.long())
 
             self.optimizer.zero_grad()
-            loss.backward()
+            loss.mean().backward()
 
 
             _, preds = torch.max(output, 1)
