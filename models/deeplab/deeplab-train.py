@@ -54,10 +54,10 @@ class Trainer:
             output = self.model(inputV)
             output = torch.softmax(output, dim=1)
 
-            _reshape = output.shape[2]*output.shape[3]
+            # _reshape = output.shape[2]*output.shape[3]
 
-            output.view(*output.shape[:2], _reshape)
-            targetV.view(targetV.shape[0], _reshape)
+            # output.view(*output.shape[:2], _reshape)
+            # targetV.view(targetV.shape[0], _reshape)
             loss = self.criterion(output, targetV.long())
 
             self.optimizer.zero_grad()

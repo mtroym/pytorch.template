@@ -9,13 +9,32 @@ def initCriterion(criterion, model):
 
 
 def createCriterion(opt, model):
-    criterion = Criterion()
+    criterion = Criterion(ignore=0)
     return criterion
+
 
 
 class Criterion(nn.Module):
     def __init__(self, ignore=-100):
         super(Criterion, self).__init__()
+        self.ignore = ignore
+
+    def forward(self, x, y):
+        """
+        Multi-class Lovasz-Softmax loss
+          probas: [B, C, H, W] Variable, class probabilities at each prediction (between 0 and 1)
+          labels: [B, H, W] Tensor, ground truth labels (between 0 and C - 1)
+          only_present: average only on classes present in ground truth
+          per_image: compute the loss per image instead of per batch
+          ignore: void class labels
+        """
+        return L.lovasz_softmax(x, y, only_present=False, per_image=False, ignore=self.ignore)
+
+
+# CELOSS.
+class _Criterion(nn.Module):
+    def __init__(self, ignore=-100):
+        super(_Criterion, self).__init__()
         self.criterion = nn.CrossEntropyLoss(ignore_index=ignore)
 
     def forward(self, x, y):
