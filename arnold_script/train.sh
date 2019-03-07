@@ -5,7 +5,7 @@ echo "\$THIS_DIR = ${THIS_DIR}
 "
 
 sudo mkdir -p /root/.torch/models/
-sudo cp /mnt/cephfs_wj/mlnlp/tony/pretrained/xception-b5690688.pth /root/.torch/models/xception-b5690688.pth
+sudo cp /mnt/cephfs_wj/mlnlp/tony/pretrained/* /root/.torch/models/xception-b5690688.pth
 #echo "copying data to the lab cluster..."
 #mkdir /opt/tiger/data/
 #cp /mnt/cephfs/lab/tony/datasets/segTHOR.tar /opt/tiger/data/
@@ -19,7 +19,6 @@ sudo cp /mnt/cephfs_wj/mlnlp/tony/pretrained/xception-b5690688.pth /root/.torch/
 cd ..
 echo "envs:
 ========="
-echo "\$GEN=${GEN}, \$MODELS=${MODELS}, \$WWW=${WWW}"
 echo "================"
 echo "arguements:
 ---------"

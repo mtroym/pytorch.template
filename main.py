@@ -32,7 +32,7 @@ checkpoint = checkpoints.load(opt)
 model, optimState = models.setup(opt, checkpoint)
 criterion, metric = criterions.setup(opt, checkpoint, model)
 # The trainer handles the training loop and evaluation on validation set
-trainer = Trainer.createTrainer(model, criterion, metric, opt, optimState)
+trainer = Trainer.createTrainer(model, criterion, metric, opt, optimState, BoardX(opt))
 
 if opt.testOnly:
     loss = trainer.test(valLoader, 0)
@@ -46,20 +46,11 @@ if checkpoint != None:
     print('Previous loss: %1.4f' % bestLoss)
 
 trainer.LRDecay(startEpoch)
-bb = BoardX(opt)
+
 for epoch in range(startEpoch, opt.nEpochs + 1):
     trainer.LRDecayStep()
     trainLoss, trainAcc = trainer.train(trainLoader, epoch)
     testLoss, testAcc = trainer.test(valLoader, epoch)
-
-    allAcc = {}
-    for metric in trainAcc:
-        allAcc[metric + "_train"] = trainAcc[metric]
-        allAcc[metric + "_val"] = testAcc[metric]
-
-    bb.writer.add_scalars(opt.suffix + '/scalar/Loss', {'Loss_train': trainLoss, 'Loss_val': testLoss}, epoch)
-    bb.writer.add_scalars(opt.suffix + '/scalar/Acc', allAcc, epoch)
-    bb.writer.add_scalars(opt.suffix + '/scalar/LR', {'LR': float(trainer.scheduler.get_lr()[0])}, epoch)
     bestModel = False
     if testLoss < bestLoss:
         bestModel = True

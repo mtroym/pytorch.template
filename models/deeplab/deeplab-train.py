@@ -9,8 +9,18 @@ from util.progbar import progbar
 from util.utils import RunningAverage
 import numpy as np
 
+# allAcc = {}
+# for metric in trainAcc:
+#     allAcc[metric + "_train"] = trainAcc[metric]
+#     allAcc[metric + "_val"] = testAcc[metric]
+#
+# bb.writer.add_scalars(opt.suffix + '/scalar/Loss', {'Loss_train': trainLoss, 'Loss_val': testLoss}, epoch)
+# bb.writer.add_scalars(opt.suffix + '/scalar/Acc', allAcc, epoch)
+# bb.writer.add_scalars(opt.suffix + '/scalar/LR', {'LR': float(trainer.scheduler.get_lr()[0])}, epoch)
+
+
 class Trainer:
-    def __init__(self, model, criterion, metrics, opt, optimState):
+    def __init__(self, model, criterion, metrics, opt, optimState, bb):
         self.model = model
         self.criterion = criterion
         self.optimState = optimState
@@ -29,6 +39,9 @@ class Trainer:
         self.logger = {'train': open(os.path.join(opt.resume, 'train.log'), 'a+'),
                        'val': open(os.path.join(opt.resume, 'test.log'), 'a+')}
 
+        self.bb = bb
+        self.bb_suffix = opt.suffix
+
     def train(self, trainLoader, epoch):
         self.model.train()
         print("=> Training epoch")
@@ -42,6 +55,7 @@ class Trainer:
         # =====
 
         for i, (input, target) in enumerate(trainLoader):
+            logger_idx = epoch - 1 + i * 1.0 / len(trainLoader)
             if self.opt.debug and i > 1:  # check debug.
                 break
             start = time.time()
@@ -71,11 +85,15 @@ class Trainer:
             runTime = time.time() - start
             runningLoss = torch.mean(loss).data.cpu().numpy()
             if not np.isnan(runningLoss):
+                self.bb.writer.add_scalars(self.bb_suffix + '/scalar/Loss', {'Loss_train': runningLoss}, logger_idx)
                 avgLoss.update(float(runningLoss))
             logAcc = []
             for metric in self.metrics.name:
-                avgAcces[metric].update(self.metrics[metric](preds, targetV))
+                meTra = float(self.metrics[metric](preds, targetV))
+                self.bb.writer.add_scalars(self.bb_suffix + '/scalar/Acc', {metric + 'val': meTra}, epoch)
+                avgAcces[metric].update(meTra)
                 logAcc.append((metric, float(avgAcces[metric]())))
+
             log = updateLog(epoch, i, len(trainLoader), runTime, avgLoss(), avgAcces)
             self.logger['train'].write(log)
             self.progbar.update(i, [('Time', runTime), ('loss', avgLoss()), *logAcc])
@@ -101,6 +119,7 @@ class Trainer:
             avgAcces[metric] = RunningAverage()
         self.progbar = progbar(len(trainLoader), width=self.opt.barwidth)
         for i, (input, target) in enumerate(trainLoader):
+            logger_idx = epoch - 1 + i * 1.0 / len(trainLoader)
             if self.opt.debug and i > 1:  # check debug.
                 break
             start = time.time()
@@ -118,12 +137,18 @@ class Trainer:
             # LOG ===
             runTime = time.time() - start
             runningLoss = torch.mean(loss).data.cpu().numpy()
+            #
             if not np.isnan(runningLoss):
+                self.bb.writer.add_scalars(self.bb_suffix + '/scalar/Loss', { 'Loss_val': runningLoss}, logger_idx)
                 avgLoss.update(float(runningLoss))
+
             logAcc = []
             for metric in self.metrics.name:
-                avgAcces[metric].update(self.metrics[metric](preds, targetV))
+                meVal = float(self.metrics[metric](preds, targetV))
+                self.bb.writer.add_scalars(self.bb_suffix + '/scalar/Acc', {metric + 'val': meVal}, epoch)
+                avgAcces[metric].update(meVal)
                 logAcc.append((metric, avgAcces[metric]()))
+
             log = updateLog(epoch, i, len(trainLoader), runTime, avgLoss(), avgAcces)
             self.logger['val'].write(log)
             self.progbar.update(i, [('Time', runTime), ('loss', avgLoss()), *logAcc])
@@ -156,5 +181,5 @@ def updateLog(epoch, i, length, time, err, Acc):
     return log
 
 
-def createTrainer(model, criterion, metric, opt, optimState):
-    return Trainer(model, criterion, metric, opt, optimState)
+def createTrainer(model, criterion, metric, opt, optimState, bb):
+    return Trainer(model, criterion, metric, opt, optimState, bb)
