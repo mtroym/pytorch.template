@@ -108,7 +108,7 @@ class Trainer:
 
             log = updateLog(epoch, i, len(trainLoader), runTime, avgLoss(), avgAcces)
             self.logger['train'].write(log)
-            self.progbar.update(i, [('Time', runTime), ('loss', avgLoss()), *logAcc])
+            self.progbar.update(i + 1, [('Time', runTime), ('loss', avgLoss()), *logAcc])
             # END LOG ===
 
         log = '\n* Finished training epoch # %d  Loss: %1.4f  ' % (epoch, avgLoss())
@@ -176,7 +176,7 @@ class Trainer:
 
             log = updateLog(epoch, i, len(trainLoader), runTime, avgLoss(), avgAcces)
             self.logger['val'].write(log)
-            self.progbar.update(i, [('Time', runTime), ('loss', avgLoss()), *logAcc])
+            self.progbar.update(i + 1, [('Time', runTime), ('loss', avgLoss()), *logAcc])
             # END LOG ===
 
         log = '\n* Finished test epoch # %d  Loss: %1.4f ' % (epoch, avgLoss())
