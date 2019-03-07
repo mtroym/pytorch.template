@@ -60,6 +60,7 @@ class Trainer:
             flag = 0
             if (i - 1) % log_interval == 0:
                 flag = 1
+                print('log_once', i, log_interval)
             if self.opt.debug and i > 1:  # check debug.
                 break
             start = time.time()
@@ -136,6 +137,7 @@ class Trainer:
             flag = 0
             if (i - 1) % log_interval == 0:
                 flag = 1
+                print('log_once', i, log_interval)
             if self.opt.debug and i > 1:  # check debug.
                 break
             start = time.time()
