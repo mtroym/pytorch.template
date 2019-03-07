@@ -58,7 +58,7 @@ class Trainer:
         for i, (input, target) in enumerate(trainLoader):
             logger_idx = i // log_interval
             flag = 0
-            if (i + 1) % log_interval == 0:
+            if (i - 1) % log_interval == 0:
                 flag = 1
             if self.opt.debug and i > 1:  # check debug.
                 break
@@ -134,7 +134,7 @@ class Trainer:
         for i, (input, target) in enumerate(trainLoader):
             logger_idx = i // log_interval
             flag = 0
-            if (i + 1) % log_interval == 0:
+            if (i - 1) % log_interval == 0:
                 flag = 1
             if self.opt.debug and i > 1:  # check debug.
                 break
