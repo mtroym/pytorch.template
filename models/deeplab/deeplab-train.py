@@ -56,9 +56,9 @@ class Trainer:
         # =====
         log_interval = int(len(trainLoader) / self.log_num)
         for i, (input, target) in enumerate(trainLoader):
-            logger_idx = i // log_interval
+            logger_idx = i // log_interval + (epoch - 1)* self.log_num
             flag = 0
-            if (i - 1) % log_interval == 0:
+            if (i - 1) % log_interval == 0 or i == (len(trainLoader) - 1):
                 flag = 1
             if self.opt.debug and i > 1:  # check debug.
                 break
@@ -132,9 +132,9 @@ class Trainer:
         self.progbar = progbar(len(trainLoader), width=self.opt.barwidth)
         log_interval = int(len(trainLoader) / self.log_num)
         for i, (input, target) in enumerate(trainLoader):
-            logger_idx = i // log_interval
+            logger_idx = i // log_interval + (epoch - 1)* self.log_num
             flag = 0
-            if (i - 1) % log_interval == 0:
+            if (i - 1) % log_interval == 0 or i == (len(trainLoader) - 1):
                 flag = 1
             if self.opt.debug and i > 1:  # check debug.
                 break
