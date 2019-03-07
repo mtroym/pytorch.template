@@ -90,7 +90,7 @@ class Trainer:
             logAcc = []
             for metric in self.metrics.name:
                 meTra = float(self.metrics[metric](preds, targetV))
-                self.bb.writer.add_scalars(self.bb_suffix + '/scalar/Acc', {metric + 'val': meTra}, epoch)
+                self.bb.writer.add_scalars(self.bb_suffix + '/scalar/Acc', {metric + '_train': meTra}, epoch)
                 avgAcces[metric].update(meTra)
                 logAcc.append((metric, float(avgAcces[metric]())))
 
@@ -145,7 +145,7 @@ class Trainer:
             logAcc = []
             for metric in self.metrics.name:
                 meVal = float(self.metrics[metric](preds, targetV))
-                self.bb.writer.add_scalars(self.bb_suffix + '/scalar/Acc', {metric + 'val': meVal}, epoch)
+                self.bb.writer.add_scalars(self.bb_suffix + '/scalar/Acc', {metric + '_val': meVal}, epoch)
                 avgAcces[metric].update(meVal)
                 logAcc.append((metric, avgAcces[metric]()))
 
