@@ -10,8 +10,9 @@ def setup(opt, checkpoint, model):
         criterionPath = os.path.join(opt.resume, checkpoint['criterionFile'])
         assert os.path.exists(criterionPath), '=> WARNING: Saved criterion not found: ' + criterionPath
         print('=> Resuming criterion from ' + criterionPath)
-        criterion, metrics = torch.load(criterionPath)
+        criterion = torch.load(criterionPath)
         criterionHandler.initCriterion(criterion, model)
+        metrics = criterionHandler.createMetrics(opt, model)
     else:
         print('=> Creating criterion from file: models/' + opt.netType + '/' + opt.netType + '-criterion.py')
         criterion = criterionHandler.createCriterion(opt, model)

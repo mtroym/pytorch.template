@@ -89,10 +89,16 @@ class Trainer:
                 avgLoss.update(float(runningLoss))
             logAcc = []
             for metric in self.metrics.name:
-                meTra = float(self.metrics[metric](preds, targetV))
-                self.bb.writer.add_scalars(self.bb_suffix + '/scalar/Acc', {metric + '_train': meTra}, epoch)
-                avgAcces[metric].update(meTra)
-                logAcc.append((metric, float(avgAcces[metric]())))
+                meTra = self.metrics[metric](preds.detach().cpu().numpy(), targetV.detach().cpu().numpy())
+                if isinstance(meTra, dict):
+                    newTra = dict()
+                    for key in meTra.keys():
+                        newTra[key + 'train'] = meTra[key]
+                    self.bb.writer.add_scalars(self.bb_suffix + '/scalar/' + metric, newTra, logger_idx)
+                else:
+                    self.bb.writer.add_scalars(self.bb_suffix + '/scalar/mIoU', {metric + '_train': meTra}, logger_idx)
+                    avgAcces[metric].update(meTra)
+                    logAcc.append((metric, avgAcces[metric]()))
 
             log = updateLog(epoch, i, len(trainLoader), runTime, avgLoss(), avgAcces)
             self.logger['train'].write(log)
@@ -144,10 +150,16 @@ class Trainer:
 
             logAcc = []
             for metric in self.metrics.name:
-                meVal = float(self.metrics[metric](preds, targetV))
-                self.bb.writer.add_scalars(self.bb_suffix + '/scalar/Acc', {metric + '_val': meVal}, epoch)
-                avgAcces[metric].update(meVal)
-                logAcc.append((metric, avgAcces[metric]()))
+                meVal = self.metrics[metric](preds.detach().cpu().numpy(), targetV.detach().cpu().numpy())
+                if isinstance(meVal, dict):
+                    newVal = dict()
+                    for key in meVal.keys():
+                        newVal[key + 'val'] = meVal[key]
+                    self.bb.writer.add_scalars(self.bb_suffix + '/scalar/' + metric, newVal, logger_idx)
+                else:
+                    self.bb.writer.add_scalars(self.bb_suffix + '/scalar/mIoU', {metric + '_val': meVal}, logger_idx)
+                    avgAcces[metric].update(meVal)
+                    logAcc.append((metric, avgAcces[metric]()))
 
             log = updateLog(epoch, i, len(trainLoader), runTime, avgLoss(), avgAcces)
             self.logger['val'].write(log)

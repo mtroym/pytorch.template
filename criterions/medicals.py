@@ -20,10 +20,8 @@ def computeQualityMeasures(lP, lT):
     labelPred = sitk.GetArrayFromImage(lP)
     labelTrue = sitk.GetArrayFromImage(lT)
     hausdorffcomputer = sitk.HausdorffDistanceImageFilter()
-
-    P = sitk.GetImageFromArray((labelTrue == 1).astype(np.int))
-    GT = sitk.GetImageFromArray((labelPred == 1).astype(np.int))
-
+    P = sitk.GetImageFromArray(labelTrue.astype(np.int))
+    GT = sitk.GetImageFromArray(labelPred.astype(np.int))
     hausdorffcomputer.Execute(P, GT)
     #  More less more ok.
     quality["avgHausdorff"] = hausdorffcomputer.GetAverageHausdorffDistance()
@@ -35,6 +33,20 @@ def computeQualityMeasures(lP, lT):
     return quality
 
 
+def hausdorffndice(labelPred, labelTrue, C, ignore):
+    quality = dict()
+    hausdorffcomputer = sitk.HausdorffDistanceImageFilter()
+    P = sitk.GetImageFromArray((labelTrue == 1).astype(np.int))
+    GT = sitk.GetImageFromArray((labelPred == 1).astype(np.int))
+    hausdorffcomputer.Execute(P, GT)
+    #  More less more ok.
+    quality["avgHausdorff"] = hausdorffcomputer.GetAverageHausdorffDistance()
+    quality["Hausdorff"] = hausdorffcomputer.GetHausdorffDistance()
+
+    dicecomputer = sitk.LabelOverlapMeasuresImageFilter()
+    dicecomputer.Execute(P, GT)
+    quality["dice"] = dicecomputer.GetDiceCoefficient()
+    return quality
 
 
 if __name__ == '__main__':

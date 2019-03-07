@@ -2,6 +2,7 @@ import numpy as np
 import torch.nn as nn
 
 import criterions.LovaszSoftmax as L
+import SimpleITK as sitk
 
 
 def initCriterion(criterion, model):
@@ -54,9 +55,63 @@ class mIoU(nn.Module):
                              per_image=self.per_image))
 
 
+class Hausdorff(nn.Module):
+    def __init__(self, C, ignore=-100):
+        super(Hausdorff, self).__init__()
+        self.C = C
+        self.ignore = ignore
+        self.hausdorffcomputer = [sitk.HausdorffDistanceImageFilter() for _ in range(C)]
+
+    def forward(self, x, y):
+        print(x, y)
+        quality = {}
+        total_val = 0.0
+        count = 0.0
+        x = x * 0
+        P = sitk.GetImageFromArray(x.astype(np.int32), isVector=False)
+        GT = sitk.GetImageFromArray(y.astype(np.int32), isVector=False)
+        for i in range(self.C):
+            if i == self.ignore:
+                continue
+            # P = sitk.GetImageFromArray((x == i).astype(np.int))
+            # GT = sitk.GetImageFromArray((y == i).astype(np.int))
+            self.hausdorffcomputer[i].Execute(P==i, GT==i)
+            quality["avg_Hausdorff_class" + str(i)] = self.hausdorffcomputer[i].GetAverageHausdorffDistance()
+            total_val += quality["avg_Hausdorff_class" + str(i)]
+            count += 1
+        quality["AVG_Hausdorff"] = total_val / (count + 1e-10)
+        return quality
+
+class DiceCoeff(nn.Module):
+    def __init__(self, C, ignore=-100, per_image=False):
+        super(DiceCoeff, self).__init__()
+        self.C = C
+        self.ignore = ignore
+        self.per_image = per_image
+
+        self.dicecomputer = [sitk.LabelOverlapMeasuresImageFilter() for _ in range(C)]
+
+    def forward(self, x, y):
+        quality = {}
+        total_val = 0.0
+        count = 0.0
+        x = x * 0
+        for i in range(self.C):
+            if i == self.ignore:
+                continue
+            P = sitk.GetImageFromArray((x.astype(np.int) == i).astype(np.int))
+            GT = sitk.GetImageFromArray((y.astype(np.int) == i).astype(np.int))
+            self.dicecomputer[i].Execute(P, GT)
+            quality["Dice_" + str(i)] = self.dicecomputer[i].GetDiceCoefficient()
+            total_val += quality["Dice_" + str(i)]
+            count += 1
+        quality["AVG_Dice"] = total_val / (count + 1e-10)
+        return quality
+
 METRICS = {
     'mIoU': mIoU(5, ignore=0),
-    'IoUs': lambda preds, labels: np.array(L.iou(preds, labels, 5, EMPTY=0.0, ignore=0, per_image=False))
+    'Dice': DiceCoeff(5, ignore=0),
+    'Hausdorff': Hausdorff(5, ignore=0)
 }
 
 

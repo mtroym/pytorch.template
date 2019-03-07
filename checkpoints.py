@@ -36,7 +36,7 @@ def load(opt):
         return loaded
 
 
-def save(epoch, model, criterion, metrics, optimizer, bestModel, loss, opt):
+def save(epoch, model, criterion, optimizer, bestModel, loss, opt):
     print('=> Saving checkpoints...')
     if isinstance(model, nn.DataParallel):
         model = model.get(0)
@@ -49,7 +49,7 @@ def save(epoch, model, criterion, metrics, optimizer, bestModel, loss, opt):
 
     if bestModel or (epoch % opt.saveEpoch == 0):
         torch.save(model.state_dict(), os.path.join(opt.resume, modelFile))
-        torch.save([criterion, metrics], os.path.join(opt.resume, criterionFile))
+        torch.save(criterion, os.path.join(opt.resume, criterionFile))
         torch.save(optimizer.state_dict(), os.path.join(opt.resume, optimFile))
         info = {'epoch': epoch, 'modelFile': modelFile, 'criterionFile': criterionFile, 'optimFile': optimFile,
                 'loss': loss}
