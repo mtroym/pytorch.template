@@ -54,13 +54,12 @@ class Trainer:
             avgAcces[metric] = RunningAverage()
         self.progbar = progbar(len(trainLoader), width=self.opt.barwidth)
         # =====
-        log_interval = len(trainLoader) / self.log_num
+        log_interval = int(len(trainLoader) / self.log_num)
         for i, (input, target) in enumerate(trainLoader):
             logger_idx = i // log_interval
             flag = 0
             if (i - 1) % log_interval == 0:
                 flag = 1
-                print('log_once', i, log_interval)
             if self.opt.debug and i > 1:  # check debug.
                 break
             start = time.time()
@@ -131,13 +130,12 @@ class Trainer:
         for metric in self.metrics.name:
             avgAcces[metric] = RunningAverage()
         self.progbar = progbar(len(trainLoader), width=self.opt.barwidth)
-        log_interval = len(trainLoader) / self.log_num
+        log_interval = int(len(trainLoader) / self.log_num)
         for i, (input, target) in enumerate(trainLoader):
             logger_idx = i // log_interval
             flag = 0
             if (i - 1) % log_interval == 0:
                 flag = 1
-                print('log_once', i, log_interval)
             if self.opt.debug and i > 1:  # check debug.
                 break
             start = time.time()
