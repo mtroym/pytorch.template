@@ -57,6 +57,7 @@ def parse():
     parser.add_argument('--bceLoss', default=0, type=float, help='Weight for bce criterion')
     parser.add_argument('--mseLoss', default=1, type=float, help='Weight for mse criterion')
     parser.add_argument('--frozen', default=False, type=str2bool, help='Weather freeze the pretrain')
+    parser.add_argument('--backbone', default='Resnet', type=str, help='Other model to be loaded', choices=['Resnet', 'Xception'])
 
     # Other model options
     parser.add_argument('--numClasses', default=5, type=int, help='Number of classes in the dataset')

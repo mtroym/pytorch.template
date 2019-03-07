@@ -6,9 +6,9 @@ import torch.nn.functional as F
 class Decoder(nn.Module):
     def __init__(self, num_classes, backbone, BatchNorm):
         super(Decoder, self).__init__()
-        if backbone == 'resnet' or backbone == 'drn':
+        if backbone == 'Resnet' or backbone == 'drn':
             low_level_inplanes = 256
-        elif backbone == 'xception':
+        elif backbone == 'Xception':
             low_level_inplanes = 128
         elif backbone == 'mobilenet':
             low_level_inplanes = 24
@@ -54,5 +54,5 @@ def build_decoder(num_classes, backbone, BatchNorm):
 
 
 if __name__ == '__main__':
-    decoder = build_decoder(5, 'xception', nn.BatchNorm2d)
+    decoder = build_decoder(5, 'Resnet', nn.BatchNorm2d)
     print(decoder)

@@ -43,7 +43,7 @@ startEpoch = max([1, opt.epochNum])
 if checkpoint != None:
     startEpoch = checkpoint['epoch'] + 1
     bestLoss = checkpoint['loss']
-    print('Previous loss: \033[1;36m%1.4f\033[0m' % bestLoss)
+    print('Previous loss: %1.4f' % bestLoss)
 
 trainer.LRDecay(startEpoch)
 bb = BoardX(opt)
@@ -57,14 +57,14 @@ for epoch in range(startEpoch, opt.nEpochs + 1):
         allAcc[metric + "_train"] = trainAcc[metric]
         allAcc[metric + "_val"] = testAcc[metric]
 
-    bb.writer.add_scalars('scalar/Loss', {'TrainLoss': trainLoss, 'ValLoss': testLoss}, epoch)
-    bb.writer.add_scalars('scalar/Acc', allAcc, epoch)
-    bb.writer.add_scalars('scalar/LR', {'LR': float(trainer.scheduler.get_lr()[0])}, epoch)
+    bb.writer.add_scalars(opt.suffix + '/scalar/Loss', {'Loss_train': trainLoss, 'Loss_val': testLoss}, epoch)
+    bb.writer.add_scalars(opt.suffix + '/scalar/Acc', allAcc, epoch)
+    bb.writer.add_scalars(opt.suffix + '/scalar/LR', {'LR': float(trainer.scheduler.get_lr()[0])}, epoch)
     bestModel = False
     if testLoss < bestLoss:
         bestModel = True
         bestLoss = testLoss
-        print(' * Best model: \033[1;36m%1.4f\033[0m * ' % testLoss)
+        print(' * Best model: %1.4f * ' % testLoss)
 
     checkpoints.save(epoch, trainer.model, criterion, metric, trainer.optimizer, bestModel, testLoss, opt)
 

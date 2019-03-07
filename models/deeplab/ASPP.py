@@ -6,7 +6,7 @@ import torch.nn.functional as F
 
 class _ASPP(nn.Module):
     def __init__(self, inplane, outplane, rates=(1, 6, 12, 18), size=None):
-        super(ASPP, self).__init__()
+        super(_ASPP, self).__init__()
         self.size = size
         self.at_pool1x1 = tl.SeparableConv2d(inplane, outplane, kernel_size=(1, 1), dilation=rates[0], bn=True)
         self.at_pool3x3_1 = tl.SeparableConv2d(inplane, outplane, kernel_size=(3, 3), dilation=rates[1], bn=True)
@@ -63,7 +63,7 @@ class ASPP(nn.Module):
             inplanes = 512
         elif backbone == 'mobilenet':
             inplanes = 320
-        else:
+        else: # Resnet
             inplanes = 2048
         if output_stride == 16:
             dilations = [1, 6, 12, 18]
@@ -80,7 +80,7 @@ class ASPP(nn.Module):
         self.global_avg_pool = nn.Sequential(nn.AdaptiveAvgPool2d((1, 1)),
                                              nn.Conv2d(inplanes, 256, 1, stride=1, bias=False),
                                              BatchNorm(256),
-                                             nn.ReLU())
+                                             nn.ReLU(inplace=True))
         self.conv1 = nn.Conv2d(1280, 256, 1, bias=False)
         self.bn1 = BatchNorm(256)
         self.relu = nn.ReLU()

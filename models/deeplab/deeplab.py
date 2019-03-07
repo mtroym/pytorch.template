@@ -15,12 +15,12 @@ from models.deeplab.Decoder import build_decoder
 # import torch.nn.functional as F
 # import torchvision
 # from torch import nn
-BACKBONE = {'Xception': build_backbone('xception', 16, nn.BatchNorm2d)}
+# BACKBONE = {'Xception': build_backbone('xception', 16, nn.BatchNorm2d)}
 
 SynchronizedBatchNorm2d = nn.BatchNorm2d
 
 class DeepLab(nn.Module):
-    def __init__(self, backbone='resnet', output_stride=16, num_classes=21,
+    def __init__(self, backbone='Resnet', output_stride=16, num_classes=21,
                  sync_bn=True, freeze_bn=False):
         super(DeepLab, self).__init__()
         if backbone == 'drn':
@@ -81,7 +81,8 @@ class _DeepLab(nn.Module):
         super(_DeepLab, self).__init__()
         self.input_dim = input_dim
         if backbone == 'Xception':
-            self.backbone = BACKBONE[backbone](input_dim=self.input_dim, outstride=outstride)
+            pass
+            # self.backbone = BACKBONE[backbone](input_dim=self.input_dim, outstride=outstride)
         self.x4size = (int(np.ceil(inputsize[0] / 4)), int(np.ceil(inputsize[1] / 4)))
         self.xoutsize = (int(np.ceil(inputsize[0] / outstride)), int(np.ceil(inputsize[1] / outstride)))
         self.ASPP = ASPP(2048, 256, size=self.xoutsize)
@@ -207,7 +208,7 @@ refers_to = "https://github.com/bonlime/keras-deeplab-v3-plus/blob/master/model.
 #     print("output shape", net(x).shape)
 
 if __name__ == "__main__":
-    model = DeepLab(backbone='xception', output_stride=16)
+    model = DeepLab(backbone='Xception', output_stride=16)
 
     # model.load_state_dict(torch.load('/Users/seolen/Seolen-Code/Ipy/Pascal-Unet/results/pretrain/deeplab-resnet.pth.tar')['state_dict'])
 
@@ -218,7 +219,7 @@ if __name__ == "__main__":
 
 
 def createModel(opt):
-    model = DeepLab(backbone='xception', output_stride=16, num_classes=opt.numClasses, sync_bn=False, freeze_bn=False)
+    model = DeepLab(backbone=opt.backbone, output_stride=16, num_classes=opt.numClasses, sync_bn=False, freeze_bn=False)
     # model = Deeplab_v3(class_number=opt.numClasses, fine_tune=False)
     # model = DeepLab(input_dim=opt.input_dim, inputsize=opt.inputSize, backbone='Xception', outstride=8,
     #                 classes=opt.numClasses)
