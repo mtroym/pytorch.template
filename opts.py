@@ -9,6 +9,7 @@ import torch.backends.cudnn as cudnn
 def parse():
     parser = argparse.ArgumentParser()
     # General options
+    parser.add_argument('--logNum', default=100, type=int, help='Log interval')
     parser.add_argument('--debug', default=False, type=str2bool, help='Debug mode')
     parser.add_argument('--manualSeed', default=0, type=int, help='manual seed')
     parser.add_argument('--GPU', default=True, type=str2bool, help='Use GPU')

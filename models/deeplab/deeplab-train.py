@@ -41,6 +41,7 @@ class Trainer:
 
         self.bb = bb
         self.bb_suffix = opt.suffix
+        self.log_num = opt.logNum
 
     def train(self, trainLoader, epoch):
         self.model.train()
@@ -53,9 +54,12 @@ class Trainer:
             avgAcces[metric] = RunningAverage()
         self.progbar = progbar(len(trainLoader), width=self.opt.barwidth)
         # =====
-
+        log_interval = len(trainLoader) / self.log_num
         for i, (input, target) in enumerate(trainLoader):
-            logger_idx = epoch - 1 + i * 1.0 / len(trainLoader)
+            logger_idx = i // log_interval
+            flag = 0
+            if (i + 1) % log_interval == 0:
+                flag = 1
             if self.opt.debug and i > 1:  # check debug.
                 break
             start = time.time()
@@ -84,7 +88,7 @@ class Trainer:
             # LOG ===
             runTime = time.time() - start
             runningLoss = torch.mean(loss).data.cpu().numpy()
-            if not np.isnan(runningLoss):
+            if not np.isnan(runningLoss) and flag == 1:
                 self.bb.writer.add_scalars(self.bb_suffix + '/scalar/Loss', {'Loss_train': runningLoss}, logger_idx)
                 avgLoss.update(float(runningLoss))
             logAcc = []
@@ -94,9 +98,11 @@ class Trainer:
                     newTra = dict()
                     for key in meTra.keys():
                         newTra[key + 'train'] = meTra[key]
-                    self.bb.writer.add_scalars(self.bb_suffix + '/scalar/' + metric, newTra, logger_idx)
+                    if flag == 1:
+                        self.bb.writer.add_scalars(self.bb_suffix + '/scalar/' + metric, newTra, logger_idx)
                 else:
-                    self.bb.writer.add_scalars(self.bb_suffix + '/scalar/mIoU', {metric + '_train': meTra}, logger_idx)
+                    if flag == 1:
+                        self.bb.writer.add_scalars(self.bb_suffix + '/scalar/mIoU', {metric + '_train': meTra}, logger_idx)
                     avgAcces[metric].update(meTra)
                     logAcc.append((metric, avgAcces[metric]()))
 
@@ -124,8 +130,12 @@ class Trainer:
         for metric in self.metrics.name:
             avgAcces[metric] = RunningAverage()
         self.progbar = progbar(len(trainLoader), width=self.opt.barwidth)
+        log_interval = len(trainLoader) / self.log_num
         for i, (input, target) in enumerate(trainLoader):
-            logger_idx = epoch - 1 + i * 1.0 / len(trainLoader)
+            logger_idx = i // log_interval
+            flag = 0
+            if (i + 1) % log_interval == 0:
+                flag = 1
             if self.opt.debug and i > 1:  # check debug.
                 break
             start = time.time()
@@ -145,7 +155,8 @@ class Trainer:
             runningLoss = torch.mean(loss).data.cpu().numpy()
             #
             if not np.isnan(runningLoss):
-                self.bb.writer.add_scalars(self.bb_suffix + '/scalar/Loss', { 'Loss_val': runningLoss}, logger_idx)
+                if flag == 1:
+                    self.bb.writer.add_scalars(self.bb_suffix + '/scalar/Loss', { 'Loss_val': runningLoss}, logger_idx)
                 avgLoss.update(float(runningLoss))
 
             logAcc = []
@@ -155,9 +166,11 @@ class Trainer:
                     newVal = dict()
                     for key in meVal.keys():
                         newVal[key + 'val'] = meVal[key]
-                    self.bb.writer.add_scalars(self.bb_suffix + '/scalar/' + metric, newVal, logger_idx)
+                    if flag == 1:
+                        self.bb.writer.add_scalars(self.bb_suffix + '/scalar/' + metric, newVal, logger_idx)
                 else:
-                    self.bb.writer.add_scalars(self.bb_suffix + '/scalar/mIoU', {metric + '_val': meVal}, logger_idx)
+                    if flag == 1:
+                        self.bb.writer.add_scalars(self.bb_suffix + '/scalar/mIoU', {metric + '_val': meVal}, logger_idx)
                     avgAcces[metric].update(meVal)
                     logAcc.append((metric, avgAcces[metric]()))
 
