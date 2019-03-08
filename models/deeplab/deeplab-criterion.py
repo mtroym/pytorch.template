@@ -10,7 +10,7 @@ def initCriterion(criterion, model):
 
 
 def createCriterion(opt, model):
-    criterion = Criterion()
+    criterion = _Criterion()
     return criterion
 
 
