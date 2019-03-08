@@ -50,7 +50,6 @@ class VOC(Dataset):
     def __getitem__(self, index):
         path, target = self.imageInfo[index]
         image = cv2.imread(path)
-        image = image.transpose([2, 0, 1])
         image = np.asarray(image)
 
         target = cv2.imread(target)
