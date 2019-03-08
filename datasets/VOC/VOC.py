@@ -77,6 +77,7 @@ class VOC(Dataset):
         im /= self.var
 
         if self.split == 'train':
+            im = t.scaleRGB(im)
             im = t.addNoise(im, 0.01, 0.01)
             im, xml = t.randomSizeCrop(im, xml, 0.9)
 
@@ -93,6 +94,7 @@ class VOC(Dataset):
         :return: same results.
         """
         im = im.transpose((1, 2, 0))
+        im = t.unScaleRGB(im)
         im *= self.var
         im += self.mean_bgr
         # TODO add masks...
