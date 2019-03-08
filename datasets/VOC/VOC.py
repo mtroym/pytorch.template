@@ -73,12 +73,13 @@ class VOC(Dataset):
         :param xml: np.array of size(h, w)
         :return: same results.
         """
+        im = im.astype(float)
+        im = t.scaleRGB(im)
         im -= self.mean_bgr
         im /= self.var
 
         if self.split == 'train':
-            im = t.scaleRGB(im)
-            im = t.addNoise(im, 0.01, 0.01)
+            im = t.addNoise(im, 0.001, 0.001)
             im, xml = t.randomSizeCrop(im, xml, 0.9)
 
         im = im.resize(new_shape=(375, 500))
