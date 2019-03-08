@@ -16,6 +16,7 @@ def bgr2rgb(im):
 
 class VOC(Dataset):
     def __init__(self, imageInfo, opt, split):
+        print("=> THe input CHANNELs are BGR not others.")
         self.imageInfo = imageInfo[split]
         self.opt = opt
         self.split = split
@@ -48,18 +49,17 @@ class VOC(Dataset):
 
     def __getitem__(self, index):
         path, target = self.imageInfo[index]
-        print(self.imageInfo[index])
         image = cv2.imread(path)
         image = image.transpose([2, 0, 1])
-        image = torch.from_numpy(image).float()
-        image = np.asarray(image).astype(np.float)
+        image = np.asarray(image)
 
         target = cv2.imread(target)
         target = bgr2rgb(target)
         target = encode_segmap(target)
-        print(np.unique(target))
+
+        image, target = self.preprocess(image, target)
+        image = torch.from_numpy(image).float()
         target = torch.from_numpy(target)
-        # target = np.asarray(target).astype(np.uint8)
 
         return image, target
 
@@ -68,17 +68,36 @@ class VOC(Dataset):
         return len(self.imageInfo)
  
     def preprocess(self, im, xml):
+        """
+        :param im: np.array of size(h, w, c)
+        :param xml: np.array of size(h, w)
+        :return: same results.
+        """
+        im -= self.mean_bgr
+        im /= self.var
+
         if self.split == 'train':
-            im = im
+            im = t.addNoise(im, 0.01, 0.01)
+            im, xml = t.randomSizeCrop(im, xml, 0.9)
 
-        # image -= self.mean_bgr
-        # image /= self.var
-        #
-
-        im = np.asarray(im)
-        im = t.normalize(im, self.mean_bgr, self.var)
+        im = im.resize(new_shape=(375, 500))
+        xml = xml.resize(new_shape=(375, 500))
         im = np.transpose(im, (2, 0, 1))
         return im, xml
+
+
+    def postprocess(self, im, xml):
+        """
+        :param im: np.array of size(c, h, w)
+        :param xml: np.array of size(h, w)
+        :return: same results.
+        """
+        im = im.transpose((1, 2, 0))
+        im *= self.var
+        im += self.mean_bgr
+        # TODO add masks...
+        return im, xml
+
 
 
 def getInstance(info, opt, split):
