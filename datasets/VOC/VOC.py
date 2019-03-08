@@ -81,8 +81,8 @@ class VOC(Dataset):
             im = t.addNoise(im, 0.001, 0.001)
             im, xml = t.randomSizeCrop(im, xml, 0.9)
 
-        im = im.resize((375, 500))
-        xml = xml.resize((375, 500))
+        im = cv2.resize(im, (375, 500))
+        xml = cv2.resize(im, (375, 500))
         im = np.transpose(im, (2, 0, 1))
         return im, xml
 
