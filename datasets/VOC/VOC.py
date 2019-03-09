@@ -17,6 +17,8 @@ def bgr2rgb(im):
 class VOC(Dataset):
     def __init__(self, imageInfo, opt, split):
         print("=> THe input CHANNELs are BGR not others.")
+        self.inputSize = (375, 500)
+        self.input_dim = 3
         self.imageInfo = imageInfo[split]
         self.opt = opt
         self.split = split
@@ -54,6 +56,11 @@ class VOC(Dataset):
 
         target = cv2.imread(target)
         target = bgr2rgb(target)
+
+        # fix b ugs.
+        image = cv2.resize(image, self.inputSize, cv2.INTER_AREA)
+        target = cv2.resize(target, self.inputSize, cv2.INTER_AREA)
+
         target = encode_segmap(target)
 
         image, target = self.preprocess(image, target)
@@ -79,10 +86,9 @@ class VOC(Dataset):
 
         if self.split == 'train':
             im = t.addNoise(im, 0.001, 0.001)
-            im, xml = t.randomSizeCrop(im, xml, 0.9)
+            # im, xml = t.randomSizeCrop(im, xml, 0.9)
+        #  >>> how to resize....
 
-        im = cv2.resize(im, (375, 500))
-        xml = cv2.resize(im, (375, 500))
         im = np.transpose(im, (2, 0, 1))
         return im, xml
 
@@ -104,5 +110,20 @@ class VOC(Dataset):
 
 def getInstance(info, opt, split):
     myInstance = VOC(info, opt, split)
+    opt.inputSize = myInstance.inputSize
+    opt.input_dim = myInstance.input_dim
     return myInstance
- 
+
+
+
+def main():
+    img_gray = np.eye(100)
+    img_gray[1:90,10:20] = 2
+    print(np.unique(img_gray))
+
+    im = cv2.resize(img_gray, (50, 50), cv2.INTER_AREA)
+    print(np.unique(im))
+    print(im.shape)
+
+if __name__ == '__main__':
+    main()
