@@ -83,9 +83,9 @@ class VOC(Dataset):
         im = t.scaleRGB(im)
         im -= self.mean_bgr
         im /= self.var
-
-        if self.split == 'train':
-            im = t.addNoise(im, 0.001, 0.001)
+        #
+        # if self.split == 'train':
+        #     im = t.addNoise(im, 0.001, 0.001)
             # im, xml = t.randomSizeCrop(im, xml, 0.9)
         #  >>> how to resize....
 
