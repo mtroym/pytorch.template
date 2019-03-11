@@ -40,7 +40,7 @@ class Trainer:
                        'val': open(os.path.join(opt.resume, 'test.log'), 'a+')}
 
         self.bb = bb
-        self.bb_suffix = opt.suffix
+        self.bb_suffix = opt.suffix + '/' + opt.hashKey
         self.log_num = opt.logNum
 
     def train(self, trainLoader, epoch):
