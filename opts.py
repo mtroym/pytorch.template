@@ -94,7 +94,7 @@ def parse():
         opt.visTrain = min(opt.visTrain, 10)
         opt.visTest = min(opt.visTest, 10)
 
-    opt.hashKey = opt.dataset + '_' + opt.netType
+    opt.hashKey = opt.dataset + '_' + opt.netType + '_' + opt.backbone + '_' + opt.optimizer
     if opt.pretrain:
         opt.hashKey = opt.hashKey + '_pre'
     opt.hashKey = opt.hashKey + '_LR' + str(opt.LR)
