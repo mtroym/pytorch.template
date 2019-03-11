@@ -218,7 +218,7 @@ if __name__ == "__main__":
 
 
 def createModel(opt):
-    model = DeepLab(backbone=opt.backbone, output_stride=16, num_classes=opt.numClasses, sync_bn=False, freeze_bn=False)
+    model = DeepLab(backbone=opt.backbone, output_stride=opt.outStride, num_classes=opt.numClasses, sync_bn=False, freeze_bn=False)
     # model = Deeplab_v3(class_number=opt.numClasses, fine_tune=False)
     # model = _DeepLab(input_dim=opt.input_dim, inputsize=opt.inputSize, backbone='Xception', outstride=8,
     #                 classes=opt.numClasses)

@@ -65,6 +65,7 @@ def parse():
     parser.add_argument('--suffix', default='', type=str, help='Suffix for saving the model')
     parser.add_argument('--dropoutRate', default=0.2, type=float, help='Drop out Rate of fc.')
     parser.add_argument('--numChannels', default=64, type=int, help='number of channel of srcnn')
+    parser.add_argument('--outStride', default=16, type=int, help='out stride for deeplab.', choices=[8, 16])
     opt = parser.parse_args()
 
     opt.GPU = opt.GPU & torch.cuda.is_available()
