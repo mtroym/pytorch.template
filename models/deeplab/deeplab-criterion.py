@@ -33,7 +33,7 @@ class Custom_Criterion(nn.Module):
         """
         loss_lovasz = self.Lovasz(x, y)
         loss_crossentropy = self.CELoss(x, y)
-        return 20 * loss_lovasz + loss_crossentropy
+        return loss_lovasz + loss_crossentropy * 0.05
 
 
 class mIoU(nn.Module):

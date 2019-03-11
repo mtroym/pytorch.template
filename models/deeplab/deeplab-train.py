@@ -66,22 +66,17 @@ class Trainer:
 
             inputV, targetV = Variable(input), Variable(target)
             if self.opt.GPU:
-                inputV = inputV.cuda()
-                targetV = targetV.cuda()
+                inputV, targetV = inputV.cuda(), targetV.cuda()
 
             output = self.model(inputV)
-            # _reshape = output.shape[2]*output.shape[3]
 
-            # output.view(*output.shape[:2], _reshape)
-            # targetV.view(targetV.shape[0], _reshape)
             loss = self.criterion(output, targetV.long())
 
             self.optimizer.zero_grad()
             loss.mean().backward()
-
+            self.optimizer.step()
 
             _, preds = torch.max(output, 1)
-            self.optimizer.step()
 
             # LOG ===
             runTime = time.time() - start
