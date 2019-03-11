@@ -1,9 +1,8 @@
+import SimpleITK as sitk
 import numpy as np
 import torch.nn as nn
 
 from criterions.lovasz_loss import LovaszSoftmax
-import criterions.LovaszSoftmax as L
-import SimpleITK as sitk
 
 
 def initCriterion(criterion, model):
@@ -44,9 +43,7 @@ class mIoU(nn.Module):
         self.per_image = per_image
 
     def forward(self, *input):
-        return np.mean(L.iou(preds=input[0], labels=input[1], C=self.C,
-                             EMPTY=0.0, ignore=self.ignore,
-                             per_image=self.per_image))
+        return np.nanmean(compute_ious(input[0], input[1], classes=self.C, ignore_index=self.ignore, only_present=True))
 
 
 class Hausdorff(nn.Module):
@@ -69,12 +66,13 @@ class Hausdorff(nn.Module):
                 continue
             # P = sitk.GetImageFromArray((x == i).astype(np.int))
             # GT = sitk.GetImageFromArray((y == i).astype(np.int))
-            self.hausdorffcomputer[i].Execute(P==i, GT==i)
+            self.hausdorffcomputer[i].Execute(P == i, GT == i)
             quality["avg_Hausdorff_class" + str(i)] = self.hausdorffcomputer[i].GetAverageHausdorffDistance()
             total_val += quality["avg_Hausdorff_class" + str(i)]
             count += 1
         quality["AVG_Hausdorff"] = total_val / (count + 1e-10)
         return quality
+
 
 class DiceCoeff(nn.Module):
     def __init__(self, C, ignore=-100, per_image=False):
@@ -102,21 +100,40 @@ class DiceCoeff(nn.Module):
         quality["AVG_Dice"] = total_val / (count + 1e-10)
         return quality
 
+
+numClasses = 21
+
 METRICS = {
-    'mIoU': mIoU(5, ignore=0),
-    'Dice': DiceCoeff(5, ignore=0),
-    'Hausdorff': Hausdorff(5, ignore=0)
+    'mIoU': mIoU,
+    'Dice': DiceCoeff,
+    'Hausdorff': Hausdorff
 }
 
 
+def compute_ious(pred, label, classes, ignore_index=255, only_present=True):
+    pred[label == ignore_index] = 0
+    ious = []
+    for c in range(classes):
+        label_c = label == c
+        if only_present and np.sum(label_c) == 0:
+            ious.append(np.nan)
+            continue
+        pred_c = pred == c
+        intersection = np.logical_and(pred_c, label_c).sum()
+        union = np.logical_or(pred_c, label_c).sum()
+        if union != 0:
+            ious.append(intersection / union)
+    return ious if ious else [1]
+
+
 class Metrics(nn.Module):
-    def __init__(self, l):
+    def __init__(self, opt, l, ignore_index=-100):
         super(Metrics, self).__init__()
         self.metrics = {}
         self.name = []
         for m in l:
             self.name.append(m)
-            self.metrics[m] = METRICS[m]
+            self.metrics[m] = METRICS[m](opt.numClasses, ignore=ignore_index)
 
     def __getitem__(self, item):
         return self.metrics[item]
@@ -128,10 +145,11 @@ class Metrics(nn.Module):
             out.append((m, evVal))
         return out
 
+
 class Evaluator(object):
     def __init__(self, num_class):
         self.num_class = num_class
-        self.confusion_matrix = np.zeros((self.num_class,)*2)
+        self.confusion_matrix = np.zeros((self.num_class,) * 2)
 
     def Pixel_Accuracy(self):
         Acc = np.diag(self.confusion_matrix).sum() / self.confusion_matrix.sum()
@@ -144,8 +162,8 @@ class Evaluator(object):
 
     def Mean_Intersection_over_Union(self, ignore_index=None):
         MIoU = np.diag(self.confusion_matrix) / (
-                    np.sum(self.confusion_matrix, axis=1) + np.sum(self.confusion_matrix, axis=0) -
-                    np.diag(self.confusion_matrix))
+                np.sum(self.confusion_matrix, axis=1) + np.sum(self.confusion_matrix, axis=0) -
+                np.diag(self.confusion_matrix))
         if ignore_index is not None:
             MIoU = np.delete(MIoU, ignore_index, 0)
         MIoU = np.nanmean(MIoU)
@@ -157,12 +175,11 @@ class Evaluator(object):
                 np.diag(self.confusion_matrix))
         return IoU
 
-
     def Frequency_Weighted_Intersection_over_Union(self):
         freq = np.sum(self.confusion_matrix, axis=1) / np.sum(self.confusion_matrix)
         iu = np.diag(self.confusion_matrix) / (
-                    np.sum(self.confusion_matrix, axis=1) + np.sum(self.confusion_matrix, axis=0) -
-                    np.diag(self.confusion_matrix))
+                np.sum(self.confusion_matrix, axis=1) + np.sum(self.confusion_matrix, axis=0) -
+                np.diag(self.confusion_matrix))
 
         FWIoU = (freq[freq > 0] * iu[freq > 0]).sum()
         return FWIoU
@@ -170,7 +187,7 @@ class Evaluator(object):
     def _generate_matrix(self, gt_image, pre_image):
         mask = (gt_image >= 0) & (gt_image < self.num_class)
         label = self.num_class * gt_image[mask].astype('int') + pre_image[mask]
-        count = np.bincount(label, minlength=self.num_class**2)
+        count = np.bincount(label, minlength=self.num_class ** 2)
         confusion_matrix = count.reshape(self.num_class, self.num_class)
         return confusion_matrix
 
@@ -182,17 +199,19 @@ class Evaluator(object):
         self.confusion_matrix = np.zeros((self.num_class,) * 2)
 
 
-
-
-
 def createMetrics(opt, model):
-    metrics = Metrics(opt.metrics)
+    metrics = Metrics(opt, opt.metrics)
     mstr = ('[' + ', '.join(opt.metrics) + ']')
     print("=> create metrics: " + mstr)
     return metrics
 
 
 if __name__ == '__main__':
-    M = Metrics(['mIoU'])
+    import opts
+
+    opt = opts.parse()
+    M = Metrics(opt, ['mIoU'], ignore_index=0)
+    x = np.ones((10, 30, 30))
+    y = np.ones((10, 30, 30))
     for m in M.name:
-        M[m](0, 1)
+        print(M[m](x, y))
