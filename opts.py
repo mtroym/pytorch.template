@@ -89,7 +89,7 @@ def parse():
 
     if opt.debug:
         opt.nEpochs = 1
-        opt.nThreads = 1
+        opt.nThreads = min(opt.nThreads, 1)
         opt.visTrain = min(opt.visTrain, 10)
         opt.visTest = min(opt.visTest, 10)
 

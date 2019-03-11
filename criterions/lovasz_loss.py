@@ -65,7 +65,7 @@ class LovaszSoftmax(nn.Module):
       only_present: average only on classes present in ground truth
     """
     def __init__(self, ignore_index=None, only_present=True):
-        super(LovaszSoftmax).__init__()
+        super(LovaszSoftmax, self).__init__()
         self.ignore_index = ignore_index
         self.only_present = only_present
 

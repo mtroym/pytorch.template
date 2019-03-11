@@ -1,12 +1,14 @@
-from PIL import Image
 import albumentations as albu
 import cv2
 import numpy as np
 import torch
+from PIL import Image
 from torch.utils.data import Dataset
 
 import datasets.transforms as t
 from datasets.VOC.decodeseg import encode_segmap
+
+
 # https://github.com/nyoki-mtl/pytorch-segmentation/blob/master/src/train.py
 
 def bgr2rgb(im):
@@ -19,6 +21,7 @@ def bgr2rgb(im):
 class VOC(Dataset):
     def __init__(self, imageInfo, opt, split):
         print("=> THe input CHANNELs are BGR not others.")
+        opt.numClasses = 21
         self.inputSize = (375, 500)
         self.input_dim = 3
         self.imageInfo = imageInfo[split]
@@ -50,35 +53,46 @@ class VOC(Dataset):
             'tv/monitor',
         ])
         self.mean_bgr = np.array([0.485, 0.456, 0.406])
+        self.mean_rgb = np.array([0.406, 0.456, 0.485])
         self.var = np.array([0.229, 0.224, 0.225])
         self.target_size = (self.inputSize[0] + 1, self.inputSize[1] + 1)
         if split == 'train':
-            self.resizor = albu.Compose([albu.RandomScale(scale_limit=(-0.5, 0.5), p=1.0),
-                                         t.PadIfNeededRightBottom(min_height=self.target_size[0],
-                                                                  min_width=self.target_size[1],
-                                                                  value=0, ignore_index=self.ignore_index, p=1.0),
-                                         albu.RandomCrop(height=self.target_size[0], width=self.target_size[1],
-                                                         p=1.0)])
+            self.resizor = albu.Compose(
+                [albu.RandomScale(scale_limit=(-0.5, 0.5), p=1.0),
+                 albu.PadIfNeeded(min_height=self.target_size[0], min_width=self.target_size[1],value=0, p=1.0),
+                 albu.RandomCrop(height=self.target_size[0], width=self.target_size[1], p=1.0)])
         else:
-            self.resizor = albu.Compose([t.PadIfNeededRightBottom(min_height=self.target_size[0],
-                                                                  min_width=self.target_size[1], value=0,
-                                                                  ignore_index=self.ignore_index, p=1.0),
-                                         albu.Crop(x_min=0, x_max=self.target_size[1], y_min=0,
-                                                   y_max=self.target_size[0])])
+            self.resizor = albu.Compose(
+                [albu.PadIfNeeded(min_height=self.target_size[0], min_width=self.target_size[1], value=0, p=1.0),
+                 albu.Crop(x_min=0, x_max=self.target_size[1], y_min=0, y_max=self.target_size[0])])
+
+        if 'train' in self.split:
+            self.image_augmenter = albu.Compose(
+                [albu.RandomBrightnessContrast(),
+                 albu.HorizontalFlip(p=0.5),
+                 albu.OpticalDistortion(p=0.5, distort_limit=2, shift_limit=0.5),])
+            # self.affine_augmenter = albu.Compose([albu])
+        else:
+            self.image_augmenter = None
 
     def __getitem__(self, index):
         path, target = self.imageInfo[index]
-        image = np.array(Image.open(path))
+        image = np.array(Image.open(path)).astype(np.float)
+        image = (image - self.mean_bgr) / self.var
         label = np.array(Image.open(target))
+        # resize
+        label[label == 255] = 0
+        blob = self.resizor(image=image, mask=label)
 
+        # augmentation
+        if self.image_augmenter:
+            blob = self.image_augmenter(image=blob['image'], mask=blob['mask'])
+        image, label = blob['image'], blob['mask']
 
-        target = encode_segmap(target)
+        image = torch.from_numpy(image.transpose([2, 0, 1])).float()
+        label = torch.from_numpy(label)
 
-        image, target = self.preprocess(image, target)
-        image = torch.from_numpy(image).float()
-        target = torch.from_numpy(target)
-
-        return image, target
+        return image, label
 
     def __len__(self):
         return len(self.imageInfo)
@@ -134,4 +148,7 @@ def main():
 
 
 if __name__ == '__main__':
+    import opts
+    opt = opts.parse()
+
     main()

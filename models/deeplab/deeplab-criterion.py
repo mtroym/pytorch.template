@@ -1,6 +1,7 @@
 import numpy as np
 import torch.nn as nn
 
+from criterions.lovasz_loss import LovaszSoftmax
 import criterions.LovaszSoftmax as L
 import SimpleITK as sitk
 
@@ -10,15 +11,16 @@ def initCriterion(criterion, model):
 
 
 def createCriterion(opt, model):
-    criterion = _Criterion()
+    criterion = Custom_Criterion(ignore=-100)
     return criterion
 
 
-
-class Criterion(nn.Module):
+class Custom_Criterion(nn.Module):
     def __init__(self, ignore=-100):
-        super(Criterion, self).__init__()
+        super(Custom_Criterion, self).__init__()
         self.ignore = ignore
+        self.Lovasz = LovaszSoftmax(only_present=False, ignore_index=self.ignore)
+        self.CELoss = nn.CrossEntropyLoss(ignore_index=self.ignore)
 
     def forward(self, x, y):
         """
@@ -29,17 +31,9 @@ class Criterion(nn.Module):
           per_image: compute the loss per image instead of per batch
           ignore: void class labels
         """
-        return L.lovasz_softmax(x, y, only_present=False, per_image=False, ignore=self.ignore)
-
-
-# CELOSS.
-class _Criterion(nn.Module):
-    def __init__(self, ignore=-100):
-        super(_Criterion, self).__init__()
-        self.criterion = nn.CrossEntropyLoss(ignore_index=ignore)
-
-    def forward(self, x, y):
-        return self.criterion(x, y)
+        loss_lovasz = self.Lovasz(x, y)
+        loss_crossentropy = self.CELoss(x, y)
+        return 20 * loss_lovasz + loss_crossentropy
 
 
 class mIoU(nn.Module):

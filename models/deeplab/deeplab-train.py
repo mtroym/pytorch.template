@@ -70,8 +70,6 @@ class Trainer:
                 targetV = targetV.cuda()
 
             output = self.model(inputV)
-            output = torch.softmax(output, dim=1)
-
             # _reshape = output.shape[2]*output.shape[3]
 
             # output.view(*output.shape[:2], _reshape)
@@ -139,21 +137,19 @@ class Trainer:
             if self.opt.debug and i > 1:  # check debug.
                 break
             start = time.time()
+
             with torch.no_grad():
                 inputV, targetV = Variable(input), Variable(target)
-            if self.opt.GPU:
-                inputV, targetV = inputV.cuda(), targetV.cuda()
-
-            with torch.no_grad():
+                if self.opt.GPU:
+                    inputV, targetV = inputV.cuda(), targetV.cuda()
                 output = self.model(inputV)
-                output = torch.softmax(output, dim=1)
-
                 loss = self.criterion(output, targetV.long())
-            _, preds = torch.max(output, 1)
+                _, preds = torch.max(output, 1)
+
             # LOG ===
             runTime = time.time() - start
-            runningLoss = torch.mean(loss).data.cpu().numpy()
-            #
+            runningLoss = torch.mean(loss).detach().cpu().numpy()
+
             if not np.isnan(runningLoss):
                 if flag == 1:
                     self.bb.writer.add_scalars(self.bb_suffix + '/scalar/Loss', { 'Loss_val': runningLoss}, logger_idx)
