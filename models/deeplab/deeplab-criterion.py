@@ -200,7 +200,7 @@ class Evaluator(object):
 
 
 def createMetrics(opt, model):
-    metrics = Metrics(opt, opt.metrics)
+    metrics = Metrics(opt, opt.metrics, 0)
     mstr = ('[' + ', '.join(opt.metrics) + ']')
     print("=> create metrics: " + mstr)
     return metrics
