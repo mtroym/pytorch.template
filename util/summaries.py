@@ -3,7 +3,7 @@ import tensorboardX
 
 class BoardX:
     def __init__(self, opt):
-        self.writer = tensorboardX.SummaryWriter(log_dir=opt.logDir + '_' + opt.hashKey)
+        self.writer = tensorboardX.SummaryWriter(log_dir=opt.logDir)
 
     def close(self):
         self.writer.close()
