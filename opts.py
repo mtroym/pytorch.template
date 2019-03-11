@@ -97,12 +97,6 @@ def parse():
     opt.hashKey = opt.dataset + '_' + opt.netType
     if opt.pretrain:
         opt.hashKey = opt.hashKey + '_pre'
-    if opt.absLoss != 0:
-        opt.hashKey = opt.hashKey + '_abs' + str(opt.absLoss)
-    if opt.mseLoss != 0:
-        opt.hashKey = opt.hashKey + '_mse' + str(opt.mseLoss)
-    if opt.bceLoss != 0:
-        opt.hashKey = opt.hashKey + '_bce' + str(opt.bceLoss)
     opt.hashKey = opt.hashKey + '_LR' + str(opt.LR)
     if opt.suffix != '':
         opt.hashKey = opt.hashKey + '_' + str(opt.suffix)
