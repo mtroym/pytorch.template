@@ -18,7 +18,7 @@ class Custom_Criterion(nn.Module):
     def __init__(self, ignore=-100):
         super(Custom_Criterion, self).__init__()
         self.ignore = ignore
-        self.Lovasz = LovaszSoftmax(only_present=False, ignore_index=self.ignore)
+        self.Lovasz = LovaszSoftmax(only_present=True, ignore_index=self.ignore)
         self.CELoss = nn.CrossEntropyLoss(ignore_index=self.ignore)
 
     def forward(self, x, y):
@@ -32,7 +32,7 @@ class Custom_Criterion(nn.Module):
         """
         loss_lovasz = self.Lovasz(x, y)
         loss_crossentropy = self.CELoss(x, y)
-        return loss_lovasz + loss_crossentropy * 0.05
+        return loss_lovasz + loss_crossentropy
 
 
 class mIoU(nn.Module):
