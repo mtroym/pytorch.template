@@ -69,7 +69,7 @@ class Trainer:
             _, preds = torch.max(output, 1)
 
             runTime = time.time() - start
-            runningLoss = torch.mean(loss).data.cpu().numpy()
+            runningLoss = torch.mean(loss).detach().cpu().numpy()
             log = self.bb.update(runningLoss, runTime, preds.detach().cpu().numpy(),
                                  targetV.detach().cpu().numpy(), 'train', i, epoch)
             self.logger['train'].write(log)
