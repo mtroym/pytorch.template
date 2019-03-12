@@ -43,8 +43,20 @@ class mIoU(nn.Module):
         self.per_image = per_image
 
     def forward(self, *input):
-        return np.nanmean(compute_ious(input[0], input[1], classes=self.C, ignore_index=self.ignore, only_present=True))
+        ious = compute_ious(input[0], input[1], classes=self.C, ignore_index=self.ignore, only_present=True)
+        if np.all(np.isnan(ious)): return 0.0
+        return np.nanmean(ious)
 
+
+class IoU(nn.Module):
+    def __init__(self, C, ignore=-100, per_image=False):
+        super(IoU, self).__init__()
+        self.C = C
+        self.ignore = ignore
+        self.per_image = per_image
+
+    def forward(self, *input):
+        return compute_ious(input[0], input[1], classes=self.C, ignore_index=self.ignore, only_present=True)
 
 class Hausdorff(nn.Module):
     def __init__(self, C, ignore=-100):
@@ -106,7 +118,8 @@ numClasses = 21
 METRICS = {
     'mIoU': mIoU,
     'Dice': DiceCoeff,
-    'Hausdorff': Hausdorff
+    'Hausdorff': Hausdorff,
+    'IoU': IoU
 }
 
 
@@ -114,6 +127,9 @@ def compute_ious(pred, label, classes, ignore_index=255, only_present=True):
     pred[label == ignore_index] = 0
     ious = []
     for c in range(classes):
+        if c == ignore_index:
+            ious.append(np.nan)
+            continue
         label_c = label == c
         if only_present and np.sum(label_c) == 0:
             ious.append(np.nan)
@@ -143,6 +159,9 @@ class Metrics(nn.Module):
         for m in self.metrics:
             evVal = self.metrics[m](input)
             out.append((m, evVal))
+            if m == 'IoU':
+                for i in range(len(evVal)):
+                    out.append(("class_" + str(i), evVal[i]))
         return out
 
 

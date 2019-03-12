@@ -1,13 +1,15 @@
 import os
 import time
 
+import numpy as np
 import torch
 import torch.optim as optim
 from torch.autograd import Variable
 
 from util.progbar import progbar
+from util.summaries import BoardX
 from util.utils import RunningAverage
-import numpy as np
+
 
 # allAcc = {}
 # for metric in trainAcc:
@@ -20,7 +22,7 @@ import numpy as np
 
 
 class Trainer:
-    def __init__(self, model, criterion, metrics, opt, optimState, bb):
+    def __init__(self, model, criterion, metrics, opt, optimState):
         self.model = model
         self.criterion = criterion
         self.optimState = optimState
@@ -39,27 +41,15 @@ class Trainer:
         self.logger = {'train': open(os.path.join(opt.resume, 'train.log'), 'a+'),
                        'val': open(os.path.join(opt.resume, 'test.log'), 'a+')}
 
-        self.bb = bb
-        self.bb_suffix = opt.suffix + '/' + opt.hashKey
+        self.bb = BoardX(opt, self.metrics, opt.hashKey, self.opt.logNum)
+        self.bb_suffix = opt.hashKey
         self.log_num = opt.logNum
 
     def train(self, trainLoader, epoch):
         self.model.train()
         print("=> Training epoch")
-
-        # =====
-        avgLoss = RunningAverage()
-        avgAcces = {}
-        for metric in self.metrics.name:
-            avgAcces[metric] = RunningAverage()
-        self.progbar = progbar(len(trainLoader), width=self.opt.barwidth)
-        # =====
-        log_interval = int(len(trainLoader) / self.log_num)
+        self.bb.start(len(trainLoader))
         for i, (input, target) in enumerate(trainLoader):
-            logger_idx = i // log_interval + (epoch - 1)* self.log_num
-            flag = 0
-            if (i - 1) % log_interval == 0 or i == (len(trainLoader) - 1):
-                flag = 1
             if self.opt.debug and i > 1:  # check debug.
                 break
             start = time.time()
@@ -78,57 +68,21 @@ class Trainer:
 
             _, preds = torch.max(output, 1)
 
-            # LOG ===
             runTime = time.time() - start
             runningLoss = torch.mean(loss).data.cpu().numpy()
-            if not np.isnan(runningLoss) and flag == 1:
-                self.bb.writer.add_scalars(self.bb_suffix + '/scalar/Loss', {'Loss_train': runningLoss}, logger_idx)
-                avgLoss.update(float(runningLoss))
-            logAcc = []
-            for metric in self.metrics.name:
-                meTra = self.metrics[metric](preds.detach().cpu().numpy(), targetV.detach().cpu().numpy())
-                if isinstance(meTra, dict):
-                    newTra = dict()
-                    for key in meTra.keys():
-                        newTra[key + 'train'] = meTra[key]
-                    if flag == 1:
-                        self.bb.writer.add_scalars(self.bb_suffix + '/scalar/' + metric, newTra, logger_idx)
-                else:
-                    if flag == 1:
-                        self.bb.writer.add_scalars(self.bb_suffix + '/scalar/mIoU', {metric + '_train': meTra}, logger_idx)
-                    avgAcces[metric].update(meTra)
-                    logAcc.append((metric, avgAcces[metric]()))
-
-            log = updateLog(epoch, i, len(trainLoader), runTime, avgLoss(), avgAcces)
+            log = self.bb.update(runningLoss, runTime, preds.detach().cpu().numpy(),
+                                 targetV.detach().cpu().numpy(), 'train', i, epoch)
             self.logger['train'].write(log)
-            self.progbar.update(i + 1, [('Time', runTime), ('loss', avgLoss()), *logAcc])
-            # END LOG ===
 
-        log = '\n* Finished training epoch # %d  Loss: %1.4f  ' % (epoch, avgLoss())
-        for metric in avgAcces:
-            log += metric + " %1.4f  " % avgAcces[metric]()
-        log += '\n'
+        log = self.bb.finish(epoch)
         self.logger['train'].write(log)
-        print(log)
-        Accs = {}
-        for metric in self.metrics.name:
-            Accs[metric] = avgAcces[metric]()
-        return avgLoss(), Accs
+        return self.bb.avgLoss()
 
     def test(self, trainLoader, epoch):
         self.model.eval()
         print("=> Validating epoch")
-        avgLoss = RunningAverage()
-        avgAcces = {}
-        for metric in self.metrics.name:
-            avgAcces[metric] = RunningAverage()
-        self.progbar = progbar(len(trainLoader), width=self.opt.barwidth)
-        log_interval = int(len(trainLoader) / self.log_num)
+        self.bb.start(len(trainLoader))
         for i, (input, target) in enumerate(trainLoader):
-            logger_idx = i // log_interval + (epoch - 1)* self.log_num
-            flag = 0
-            if (i - 1) % log_interval == 0 or i == (len(trainLoader) - 1):
-                flag = 1
             if self.opt.debug and i > 1:  # check debug.
                 break
             start = time.time()
@@ -144,42 +98,13 @@ class Trainer:
             # LOG ===
             runTime = time.time() - start
             runningLoss = torch.mean(loss).detach().cpu().numpy()
-
-            if not np.isnan(runningLoss):
-                if flag == 1:
-                    self.bb.writer.add_scalars(self.bb_suffix + '/scalar/Loss', { 'Loss_val': runningLoss}, logger_idx)
-                avgLoss.update(float(runningLoss))
-
-            logAcc = []
-            for metric in self.metrics.name:
-                meVal = self.metrics[metric](preds.detach().cpu().numpy(), targetV.detach().cpu().numpy())
-                if isinstance(meVal, dict):
-                    newVal = dict()
-                    for key in meVal.keys():
-                        newVal[key + 'val'] = meVal[key]
-                    if flag == 1:
-                        self.bb.writer.add_scalars(self.bb_suffix + '/scalar/' + metric, newVal, logger_idx)
-                else:
-                    if flag == 1:
-                        self.bb.writer.add_scalars(self.bb_suffix + '/scalar/mIoU', {metric + '_val': meVal}, logger_idx)
-                    avgAcces[metric].update(meVal)
-                    logAcc.append((metric, avgAcces[metric]()))
-
-            log = updateLog(epoch, i, len(trainLoader), runTime, avgLoss(), avgAcces)
+            log = self.bb.update(runningLoss, runTime, preds.detach().cpu().numpy(),
+                                 targetV.detach().cpu().numpy(), 'val', i, epoch)
             self.logger['val'].write(log)
-            self.progbar.update(i + 1, [('Time', runTime), ('loss', avgLoss()), *logAcc])
             # END LOG ===
-
-        log = '\n* Finished test epoch # %d  Loss: %1.4f ' % (epoch, avgLoss())
-        for metric in avgAcces:
-            log += metric + " %1.4f  " % avgAcces[metric]()
-        log += '\n'
-        self.logger['val'].write(log)
-        print(log)
-        Accs = {}
-        for metric in self.metrics.name:
-            Accs[metric] = avgAcces[metric]()
-        return avgLoss(), Accs
+        log = self.bb.finish(epoch)
+        self.logger['train'].write(log)
+        return self.bb.avgLoss()
 
     def LRDecay(self, epoch):
         self.scheduler = optim.lr_scheduler.ExponentialLR(self.optimizer, gamma=0.95, last_epoch=epoch - 2)
@@ -188,14 +113,5 @@ class Trainer:
         self.scheduler.step()
 
 
-def updateLog(epoch, i, length, time, err, Acc):
-    log = 'Epoch: [%d][%d/%d] Time %1.3f Err %1.4f   ' % (
-        epoch, i, length, time, err)
-    for metric in Acc:
-        log += metric + " %1.4f  " % Acc[metric]()
-    log += '\n'
-    return log
-
-
-def createTrainer(model, criterion, metric, opt, optimState, bb):
-    return Trainer(model, criterion, metric, opt, optimState, bb)
+def createTrainer(model, criterion, metric, opt, optimState):
+    return Trainer(model, criterion, metric, opt, optimState)

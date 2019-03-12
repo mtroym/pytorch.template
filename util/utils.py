@@ -1,3 +1,5 @@
+import numpy as np
+
 class RunningAverage():
     """A simple class that maintains the running average of a quantity
 
@@ -10,13 +12,16 @@ class RunningAverage():
     ```
     """
 
-    def __init__(self):
-        self.steps = 0
-        self.total = 0
+    def __init__(self, len=10, default=0.0):
+        self.total = [np.nan] * len
+        self.index = 0
+        self.len = len
+        self.default = default
 
     def update(self, val):
-        self.total += val
-        self.steps += 1
+        self.total[self.index] = val
+        self.index = (self.index + 1) % self.len
 
     def __call__(self):
-        return self.total / (float(self.steps) + 1e-10)
+        if np.all(np.isnan(self.total)): return self.default
+        return np.nanmean(self.total)
