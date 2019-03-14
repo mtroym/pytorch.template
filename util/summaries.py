@@ -2,7 +2,7 @@ import numpy as np
 import tensorboardX
 
 from util.progbar import progbar
-from util.utils import RunningAverage
+from util.utils import RunningAverage, RunningAverageNaN
 
 
 def updateLog(epoch, i, length, time, err, Acc):
@@ -24,15 +24,15 @@ class BoardX:
 
     def start(self, lenDS):
         self.lenDS = lenDS
-        self.avgLoss = RunningAverage()
+        self.avgLoss = RunningAverage(100, 1)
         self.avgAcces = {}
         # init all metrics
         for metric in self.metrics.name:
             if metric == 'IoU':
                 for c in range(1, self.opt.numClasses):
-                    self.avgAcces['IoU#{}'.format(c)] = RunningAverage()
+                    self.avgAcces['IoU#{}'.format(c)] = RunningAverageNaN(0.0)
             else:  # mIoU
-                self.avgAcces[metric] = RunningAverage()
+                self.avgAcces[metric] = RunningAverageNaN(0.0)
         self.progbar = progbar(self.lenDS, width=self.opt.barwidth)
         self.log_interval = int(lenDS / self.log_num)
 
@@ -46,10 +46,12 @@ class BoardX:
             flag = 1
 
         for loss in lossRecord:
-            if not np.isnan(lossRecord[loss]) and flag == 1:
+            if not np.isnan(lossRecord[loss]) and flag == 1 and self.log_num != 1:
                 self.writer.add_scalars(self.suffix + '/scalar/Loss', {loss + '_' + split: lossRecord[loss]}, logger_idx)
             if loss == 'loss':
                 self.avgLoss.update(lossRecord['loss'])
+        if self.log_num == 1:
+            self.writer.add_scalars(self.suffix + '/scalar/Loss', {'loss_' + split: self.avgLoss()}, logger_idx)
 
         self.logAcc = []
         for metric in self.metrics.name:

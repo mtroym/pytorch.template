@@ -1,7 +1,7 @@
 import numpy as np
 
 
-class RunningAverage():
+class RunningAverage:
     """A simple class that maintains the running average of a quantity
     Example:
     ```
@@ -32,3 +32,29 @@ class RunningAverage():
 
     def __len__(self):
         return self.len
+
+
+class RunningAverageNaN:
+    """A simple class that maintains the running average of a quantity
+    Example:
+    ```
+    loss_avg = RunningAverage()
+    loss_avg.update(2)
+    loss_avg.update(4)
+    loss_avg() = 3
+    ```
+    """
+
+    def __init__(self, default=0.0):
+        self.total = 0.0
+        self.default = default
+        self.count = 0
+
+    def update(self, val):
+        if np.isnan(val):
+            return
+        self.total += val
+        self.count += 1
+
+    def __call__(self):
+        return (self.total / self.count) if self.count > 0 else self.default
