@@ -1,3 +1,5 @@
+import copy
+
 import numpy as np
 
 
@@ -51,10 +53,62 @@ class RunningAverageNaN:
         self.count = 0
 
     def update(self, val):
-        if np.isnan(val):
-            return
-        self.total += val
-        self.count += 1
+        if not np.isnan(val):
+            self.total += val
+            self.count += 1
 
     def __call__(self):
         return (self.total / self.count) if self.count > 0 else self.default
+
+
+class RunningAverageDict:
+    """A simple class that maintains the running average of a quantity
+    Example:
+    ```
+    loss_avg = RunningAverageDict(0.0)
+    loss_avg.update({'name1': 2, 'name2':3, 'name3': np.nan})
+    loss_avg.update({'name1': 6, 'name2':np.nan, 'name3':np.nan})
+    loss_avg() = {'name1':4, 'name2':3, 'name3': np.nan}
+    loss_avg('fuck') = {'name1_fuck':4, 'name2_fuck':3, 'name3_fuck': np.nan}
+    ```
+    """
+    def __init__(self, default=0.0):
+        self.total = None
+        self.default = default
+
+    def update(self, val):
+        '''val is a dict'''
+        if self.total is None:
+            self.total = copy.deepcopy(val)
+            for keys in self.total:
+                self.total[keys] = RunningAverageNaN(default=self.default)
+        for keys in self.total:
+            self.total[keys].update(val[keys])
+
+    def __call__(self, suffix=''):
+        return_dict = dict()
+        for keys in self.total:
+            val = '_'.join((keys, suffix)) if suffix != '' else keys
+            return_dict[val] = self.total[keys]()
+        return return_dict
+
+
+if __name__ == '__main__':
+    loss_avg = RunningAverageDict(0.0)
+    loss_avg.update({'name1': 2, 'name2': 3, 'name3': np.nan})
+    print(loss_avg('train'))
+    loss_avg.update({'name1': 6, 'name2': np.nan, 'name3': np.nan})
+    # loss_avg() = {'name1':4, 'name2':3, 'name3': np.nan}
+    print(loss_avg('val'))
+    loss_avg.update({'name1': 1, 'name2': 1, 'name3': np.nan})
+    # loss_avg() = {'name1':4, 'name2':3, 'name3': np.nan}
+    print(loss_avg('train'))
+    #
+
+    # loss = RunningAverageNaN(0.0)
+    # loss.update(10)
+    # print(loss())
+    # loss.update(np.nan)
+    # print(loss())
+    # loss.update(4)
+    # print(loss())

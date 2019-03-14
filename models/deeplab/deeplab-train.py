@@ -46,12 +46,12 @@ class Trainer:
         print("=> Training epoch")
         self.model.train()
         self.bb.start(len(trainLoader))
-        for i, (input, target) in enumerate(trainLoader):
+        for i, (inputs, target) in enumerate(trainLoader):
             if self.opt.debug and i > 1:  # check debug.
                 break
             start = time.time()
 
-            inputV, targetV = Variable(input), Variable(target)
+            inputV, targetV = Variable(inputs), Variable(target)
             if self.opt.GPU:
                 inputV, targetV = inputV.cuda(), targetV.cuda()
 
@@ -62,48 +62,60 @@ class Trainer:
             self.optimizer.zero_grad()
             loss.mean().backward()
             self.optimizer.step()
-
             _, preds = torch.max(output, 1)
-
+            metrics = self.metrics(preds, targetV)
             runTime = time.time() - start
-            log = self.bb.update(loss_record, runTime, preds, targetV, 'train', i, epoch)
+            log = self.bb.update(loss_record, runTime, metrics, 'train', i, epoch)
             self.logger['train'].write(log)
 
-        log = self.bb.finish(epoch)
+        log = self.bb.finish(epoch, 'train')
         self.logger['train'].write(log)
-        return self.bb.avgLoss()
+        return self.bb.avgLoss()['loss']
 
     def test(self, trainLoader, epoch):
         print("=> Validating epoch")
         self.model.eval()
         self.bb.start(len(trainLoader))
-        for i, (input, target) in enumerate(trainLoader):
+        for i, (inputs, target) in enumerate(trainLoader):
             if self.opt.debug and i > 1:  # check debug.
                 break
             start = time.time()
 
             with torch.no_grad():
-                inputV, targetV = Variable(input), Variable(target)
+                inputV, targetV = Variable(inputs), Variable(target)
                 if self.opt.GPU:
                     inputV, targetV = inputV.cuda(), targetV.cuda()
                 output = self.model(inputV)
-                _, loss_record = self.criterion(output, targetV.long())
                 _, preds = torch.max(output, 1)
+                # Compute loss and preds
+                _, loss_record = self.criterion(output, targetV.long())
+                metrics = self.metrics(preds, targetV)
+
 
             runTime = time.time() - start
-            log = self.bb.update(loss_record, runTime, preds, targetV, 'val', i, epoch)
+            log = self.bb.update(loss_record, runTime, metrics, 'val', i, epoch)
             self.logger['val'].write(log)
 
-        log = self.bb.finish(epoch)
+        log = self.bb.finish(epoch, 'val')
         self.logger['train'].write(log)
-        return self.bb.avgLoss()
+        return self.bb.avgLoss()['loss']
+
 
     def LRDecay(self, epoch):
+        # poly_scheduler.adjust_lr(self.optimizer, epoch)
         self.scheduler = optim.lr_scheduler.ExponentialLR(self.optimizer, gamma=0.95, last_epoch=epoch - 2)
 
     def LRDecayStep(self):
         self.scheduler.step()
 
+class poly_scheduler:
+    def __init__(self, opt):
+        self.opt = opt
+
+    def adjust_lr(self, optimizer, epoch):
+        lr = self.opt.LR * (1 - epoch / self.opt.nEpochs) ** 0.9
+        for param_group in optimizer.param_groups:
+            param_group['lr'] = lr
 
 def createTrainer(model, criterion, metric, opt, optimState):
     return Trainer(model, criterion, metric, opt, optimState)

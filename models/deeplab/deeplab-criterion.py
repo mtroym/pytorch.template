@@ -1,8 +1,10 @@
 import SimpleITK as sitk
 import numpy as np
-import torch.nn as nn
 import torch
+import torch.nn as nn
+
 from criterions.lovasz_loss import LovaszSoftmax
+
 
 # LOSS : return total_loss(float), loss_dict(dict()) -> {'total': loss, 'singleLoss1': loss}
 
@@ -48,10 +50,11 @@ class mIoU(nn.Module):
         self.ignore = ignore
         self.per_image = per_image
 
-    def forward(self, *input):
-        ious = compute_ious(input[0], input[1], classes=self.C, ignore_index=self.ignore, only_present=True)
-        if np.all(np.isnan(ious)): return 0.0
-        return np.nanmean(ious)
+    def forward(self, x, y):
+        ious = compute_ious(x, y, classes=self.C, ignore_index=self.ignore, only_present=True)
+        if np.all(np.isnan(np.array(list(ious.values())))):
+            return 0.0
+        return {'mIoU': np.nanmean(np.array(list(ious.values())))}
 
 
 class IoU(nn.Module):
@@ -63,6 +66,7 @@ class IoU(nn.Module):
 
     def forward(self, *input):
         return compute_ious(input[0], input[1], classes=self.C, ignore_index=self.ignore, only_present=True)
+
 
 class Hausdorff(nn.Module):
     def __init__(self, C, ignore=-100):
@@ -131,21 +135,21 @@ METRICS = {
 
 def compute_ious(pred, label, classes, ignore_index=255, only_present=True):
     pred[label == ignore_index] = 0
-    ious = []
+    ious = {}
     for c in range(classes):
         if c == ignore_index:
-            ious.append(np.nan)
+            # ious['IoU#' + str(c)] = np.nan
             continue
         label_c = label == c
         pred_c = pred == c
         if only_present and torch.sum(label_c) == 0:
-            ious.append(np.nan)
+            ious['IoU#' + str(c)] = np.nan
             continue
         intersection = (pred_c & label_c).sum()
         union = (pred_c | label_c).sum()
         if union != 0:
-            ious.append(float((intersection / union).detach().cpu().numpy()))
-    return ious if ious else [1]
+            ious['IoU#' + str(c)] = float((intersection / union).detach().cpu().numpy())
+    return ious
 
 
 class Metrics(nn.Module):
@@ -157,17 +161,16 @@ class Metrics(nn.Module):
             self.name.append(m)
             self.metrics[m] = METRICS[m](opt.numClasses, ignore=ignore_index)
 
-    def __getitem__(self, item):
-        return self.metrics[item]
-
-    def forward(self, *input):
-        out = []
+    def forward(self, x, y):
+        out = dict()
         for m in self.metrics:
-            evVal = self.metrics[m](input)
-            out.append((m, evVal))
-            if m == 'IoU':
-                for i in range(len(evVal)):
-                    out.append(("class_" + str(i), evVal[i]))
+            metrics_value = self.metrics[m](x, y)
+            if isinstance(metrics_value, dict):
+                for key in metrics_value:
+                    out[key] = metrics_value[key]
+            else:
+                assert isinstance(metrics_value, float), 'Error of the metric value type'
+                out[m] = metrics_value
         return out
 
 
@@ -232,11 +235,15 @@ def createMetrics(opt, model):
 
 
 if __name__ == '__main__':
-    import opts
-
-    opt = opts.parse()
-    M = Metrics(opt, ['mIoU'], ignore_index=0)
-    x = np.ones((10, 30, 30))
-    y = np.ones((10, 30, 30))
-    for m in M.name:
-        print(M[m](x, y))
+    # import opts
+    #
+    # opt = opts.parse()
+    # M = Metrics(opt, ['mIoU'], ignore_index=0)
+    # x = np.ones((10, 30, 30))
+    # y = np.ones((10, 30, 30))
+    # for m in M.name:
+    #     print(M[m](x, y))
+    a = dict()
+    a['x'] = 10
+    a['y'] = np.nan
+    print(np.isnan(np.array(list(a.values()))))
