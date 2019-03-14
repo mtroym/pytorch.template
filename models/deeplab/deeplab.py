@@ -18,6 +18,7 @@ from models.deeplab.Decoder import build_decoder
 
 SynchronizedBatchNorm2d = nn.BatchNorm2d
 
+
 class DeepLab(nn.Module):
     def __init__(self, backbone='Resnet', output_stride=16, num_classes=21,
                  sync_bn=True, freeze_bn=False):
@@ -71,8 +72,6 @@ class DeepLab(nn.Module):
                     for p in m[1].parameters():
                         if p.requires_grad:
                             yield p
-
-
 
 
 class _DeepLab(nn.Module):
@@ -138,6 +137,7 @@ class _ASPP(nn.Module):
                                               atrous_block12, atrous_block18], dim=1))
         return net
 
+
 #
 # class Deeplab_v3(nn.Module):
 #     # in_channel = 3 fine-tune
@@ -192,8 +192,6 @@ class _ASPP(nn.Module):
 #     return model
 
 
-
-
 # https://github.com/gengyanlei/deeplab_v3/edit/master/deeplab_v3_50.py
 refers_to = "https://github.com/bonlime/keras-deeplab-v3-plus/blob/master/model.py"
 
@@ -218,7 +216,8 @@ if __name__ == "__main__":
 
 
 def createModel(opt):
-    model = DeepLab(backbone=opt.backbone, output_stride=opt.outStride, num_classes=opt.numClasses, sync_bn=False, freeze_bn=False)
+    model = DeepLab(backbone=opt.backbone, output_stride=opt.outStride, num_classes=opt.numClasses, sync_bn=False,
+                    freeze_bn=False)
     # model = Deeplab_v3(class_number=opt.numClasses, fine_tune=False)
     # model = _DeepLab(input_dim=opt.input_dim, inputsize=opt.inputSize, backbone='Xception', outstride=8,
     #                 classes=opt.numClasses)

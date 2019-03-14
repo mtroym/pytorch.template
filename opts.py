@@ -27,6 +27,8 @@ def parse():
     parser.add_argument('--nThreads', default=8, type=int, help='Number of data loading threads')
     parser.add_argument('--trainPctg', default=0.95, type=float, help='Percentage of training images')
     parser.add_argument('--imgDim', default=224, type=int, help='Image dimension')
+    parser.add_argument('--DSmode', default='mem', type=str, help='datasets load mode, mem requires higher memory.',
+                        choices=['mem', 'file'])
     # Training/testing options
     parser.add_argument('--logDir', default='./log_dir', type=str, help='Tensorboard dir.')
     parser.add_argument('--nEpochs', default=100, type=int, help='Number of total epochs to run')
@@ -58,7 +60,8 @@ def parse():
     parser.add_argument('--bceLoss', default=0, type=float, help='Weight for bce criterion')
     parser.add_argument('--mseLoss', default=1, type=float, help='Weight for mse criterion')
     parser.add_argument('--frozen', default=False, type=str2bool, help='Weather freeze the pretrain')
-    parser.add_argument('--backbone', default='Resnet', type=str, help='Other model to be loaded', choices=['Resnet', 'Xception'])
+    parser.add_argument('--backbone', default='Resnet', type=str, help='Other model to be loaded',
+                        choices=['Resnet', 'Xception'])
 
     # Other model options
     parser.add_argument('--numClasses', default=5, type=int, help='Number of classes in the dataset')
@@ -82,10 +85,10 @@ def parse():
 
     # for arnold script.
     print('**************** DEFINE SOME PATH *****************')
-    print('\t-=> opt.data='+opt.data)
-    print('\t-=> opt.gen='+opt.gen)
-    print('\t-=> opt.www='+opt.www)
-    print('\t-=> opt.resume='+opt.resume)
+    print('\t-=> opt.data=' + opt.data)
+    print('\t-=> opt.gen=' + opt.gen)
+    print('\t-=> opt.www=' + opt.www)
+    print('\t-=> opt.resume=' + opt.resume)
     print('**************** ^^^^^^^^^^^^^^^^ *****************')
 
     if opt.debug:
