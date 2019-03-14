@@ -42,64 +42,52 @@ class Trainer:
         self.bb_suffix = opt.hashKey
         self.log_num = opt.logNum
 
-    def train(self, trainLoader, epoch):
-        print("=> Training epoch")
-        self.model.train()
-        self.bb.start(len(trainLoader))
-        for i, (inputs, target) in enumerate(trainLoader):
+    def processing(self, dataloader, epoch, split):
+        print('=> {}ing epoch # {}'.format(split, epoch))
+        TRAIN = split == 'train'
+        if TRAIN:
+            self.model.train()
+        else:  # VAL
+            self.model.eval()
+        self.bb.start(len(dataloader))
+        for i, (inputs, target) in enumerate(dataloader):
             if self.opt.debug and i > 1:  # check debug.
                 break
             start = time.time()
 
-            inputV, targetV = Variable(inputs), Variable(target)
+            # * Data preparation *
+            # inputs.requires_grad_(TRAIN)
+            # target.requires_grad_(TRAIN)
             if self.opt.GPU:
-                inputV, targetV = inputV.cuda(), targetV.cuda()
+                inputs, target = inputs.cuda(), target.cuda()
+            inputV, targetV = Variable(inputs), Variable(target)
 
+            # * Feed in nets*
+            if TRAIN:
+                self.optimizer.zero_grad()
             output = self.model(inputV)
-
             loss, loss_record = self.criterion(output, targetV.long())
-
-            self.optimizer.zero_grad()
-            loss.mean().backward()
-            self.optimizer.step()
-            _, preds = torch.max(output, 1)
-            metrics = self.metrics(preds, targetV)
-            runTime = time.time() - start
-            log = self.bb.update(loss_record, runTime, metrics, 'train', i, epoch)
-            self.logger['train'].write(log)
-
-        log = self.bb.finish(epoch, 'train')
-        self.logger['train'].write(log)
-        return self.bb.avgLoss()['loss']
-
-    def test(self, trainLoader, epoch):
-        print("=> Validating epoch")
-        self.model.eval()
-        self.bb.start(len(trainLoader))
-        for i, (inputs, target) in enumerate(trainLoader):
-            if self.opt.debug and i > 1:  # check debug.
-                break
-            start = time.time()
-
+            if TRAIN:
+                loss.mean().backward()
+                self.optimizer.step()
+            # * Eval *
             with torch.no_grad():
-                inputV, targetV = Variable(inputs), Variable(target)
-                if self.opt.GPU:
-                    inputV, targetV = inputV.cuda(), targetV.cuda()
-                output = self.model(inputV)
                 _, preds = torch.max(output, 1)
-                # Compute loss and preds
-                _, loss_record = self.criterion(output, targetV.long())
                 metrics = self.metrics(preds, targetV)
 
-
             runTime = time.time() - start
-            log = self.bb.update(loss_record, runTime, metrics, 'val', i, epoch)
-            self.logger['val'].write(log)
+            log = self.bb.update(loss_record, runTime, metrics, split, i, epoch)
+            self.logger['train'].write(log)
 
-        log = self.bb.finish(epoch, 'val')
-        self.logger['train'].write(log)
+        log = self.bb.finish(epoch, split)
+        self.logger[split].write(log)
         return self.bb.avgLoss()['loss']
 
+    def train(self, trainLoader, epoch):
+        return self.processing(trainLoader, epoch, 'train')
+
+    def test(self, trainLoader, epoch):
+        return self.processing(trainLoader, epoch, 'val')
 
     def LRDecay(self, epoch):
         # poly_scheduler.adjust_lr(self.optimizer, epoch)
@@ -107,6 +95,7 @@ class Trainer:
 
     def LRDecayStep(self):
         self.scheduler.step()
+
 
 class poly_scheduler:
     def __init__(self, opt):
@@ -116,6 +105,7 @@ class poly_scheduler:
         lr = self.opt.LR * (1 - epoch / self.opt.nEpochs) ** 0.9
         for param_group in optimizer.param_groups:
             param_group['lr'] = lr
+
 
 def createTrainer(model, criterion, metric, opt, optimState):
     return Trainer(model, criterion, metric, opt, optimState)

@@ -100,7 +100,7 @@ if __name__ == '__main__':
     loss_avg.update({'name1': 6, 'name2': np.nan, 'name3': np.nan})
     # loss_avg() = {'name1':4, 'name2':3, 'name3': np.nan}
     print(loss_avg('val'))
-    loss_avg.update({'name1': 1, 'name2': 1, 'name3': np.nan})
+    loss_avg.update({'name1': 1, 'name2': np.nan, 'name3': 1})
     # loss_avg() = {'name1':4, 'name2':3, 'name3': np.nan}
     print(loss_avg('train'))
     #

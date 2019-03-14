@@ -43,7 +43,7 @@ class BoardX:
         self.avgAcces.update(metrics)
 
         if flag == 1:
-            self.writer.add_scalars(self.suffix + '/scalar/Loss' + '_' + split, self.avgLoss(split), logger_idx)
+            self.writer.add_scalars(self.suffix + '/scalar/Loss', self.avgLoss(split), logger_idx)
             self.writer.add_scalars(self.suffix + '/scalar/Acc' + '_' + split, self.avgAcces(split), logger_idx)
         log = updateLog(epoch, i, self.lenDS, time, self.avgLoss(split), self.avgAcces(split))
         self.progbar.update(i + 1,

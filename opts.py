@@ -32,7 +32,7 @@ def parse():
     # Training/testing options
     parser.add_argument('--logDir', default='./log_dir', type=str, help='Tensorboard dir.')
     parser.add_argument('--nEpochs', default=100, type=int, help='Number of total epochs to run')
-    parser.add_argument('--metrics', default='[PSNR, SSIM]', type=str2list, help='metrics in eval part')
+    parser.add_argument('--metrics', default='[mIoU]', type=str2list, help='metrics in eval part')
     parser.add_argument('--epochNum', default=-1, type=int, help='0=retrain | -1=latest | -2=best', choices=[0, -1, -2])
     parser.add_argument('--batchSize', default=64, type=int, help='mini-batch size')
     parser.add_argument('--saveEpoch', default=5, type=int, help='saving at least # epochs')
