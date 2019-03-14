@@ -4,6 +4,7 @@ import tensorboardX
 from util.progbar import progbar
 from util.utils import RunningAverage
 
+
 def updateLog(epoch, i, length, time, err, Acc):
     log = 'Epoch: [%d][%d/%d] Time %1.3f Err %1.4f   ' % (
         epoch, i, length, time, err)
@@ -30,41 +31,46 @@ class BoardX:
             if metric == 'IoU':
                 for c in range(1, self.opt.numClasses):
                     self.avgAcces['IoU#{}'.format(c)] = RunningAverage()
-            else:
+            else:  # mIoU
                 self.avgAcces[metric] = RunningAverage()
         self.progbar = progbar(self.lenDS, width=self.opt.barwidth)
         self.log_interval = int(lenDS / self.log_num)
 
-    def update(self, runningLoss, time, preds, targets, split, i, epoch):
-        # self.writer.add_scalar(//)
-        logger_idx = i // self.log_interval + (epoch - 1) * self.log_num
+    def update(self, lossRecord, time, preds, targets, split, i, epoch):
+        # TODO: separate the metrics operation out of this function.
+        # lossRecord -> {'loss': val, 'combined_1': val, 'combined_2':val}
+        # must have one val which key is `loss` !
+        logger_idx = np.floor(i // self.log_interval) + (epoch - 1) * self.log_num
         flag = 0
-        if (i - 1) % self.log_interval == 0 or i == (self.lenDS - 1):
+        if (i - 1) % self.log_interval == 0:
             flag = 1
 
-        if not np.isnan(runningLoss) and flag == 1:
-            self.writer.add_scalars(self.suffix + '/scalar/Loss', {'Loss_' + split: runningLoss}, logger_idx)
-            self.avgLoss.update(float(runningLoss))
+        for loss in lossRecord:
+            if not np.isnan(lossRecord[loss]) and flag == 1:
+                self.writer.add_scalars(self.suffix + '/scalar/Loss', {loss + '_' + split: lossRecord[loss]}, logger_idx)
+            if loss == 'loss':
+                self.avgLoss.update(lossRecord['loss'])
+
         self.logAcc = []
         for metric in self.metrics.name:
-            meTra = self.metrics[metric](preds, targets)
+            metric_value = self.metrics[metric](preds, targets)
             if metric == 'IoU':
-                newTra = dict()
-                for class_i in range(1, len(meTra)):
+                IoU_dict = dict()
+                for class_i in range(1, len(metric_value)):
                     lower_key = 'IoU#{}'.format(class_i)
-                    lower_val = meTra[class_i]
-
+                    # metric have GPU tensors.
+                    lower_val = float(metric_value[class_i].detach().cpu().numpy())
                     # update...
-                    newTra['IoU#{}'.format(class_i)] = meTra[class_i]
+                    IoU_dict['IoU#{}'.format(class_i)] = lower_val
                     self.avgAcces[lower_key].update(lower_val)
                     self.logAcc.append((lower_key, lower_val))
                 if flag == 1:
-                    self.writer.add_scalars(self.suffix + '/scalar/' + metric + "_" + split, newTra, logger_idx)
+                    self.writer.add_scalars(self.suffix + '/scalar/' + metric + "_" + split, IoU_dict, logger_idx)
             else:
                 if flag == 1:
-                    self.writer.add_scalars(self.suffix + '/scalar/' + metric, {metric + '_' + split: meTra},
+                    self.writer.add_scalars(self.suffix + '/scalar/' + metric, {metric + '_' + split: metric_value},
                                             logger_idx)
-                self.avgAcces[metric].update(meTra)
+                self.avgAcces[metric].update(metric_value)
                 self.logAcc.append((metric, self.avgAcces[metric]()))
 
         log = updateLog(epoch, i, self.lenDS, time, self.avgLoss(), self.avgAcces)

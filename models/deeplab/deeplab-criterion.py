@@ -4,6 +4,8 @@ import torch.nn as nn
 
 from criterions.lovasz_loss import LovaszSoftmax
 
+# LOSS : return total_loss(float), loss_dict(dict()) -> {'total': loss, 'singleLoss1': loss}
+
 
 def initCriterion(criterion, model):
     pass
@@ -32,7 +34,11 @@ class Custom_Criterion(nn.Module):
         """
         loss_lovasz = self.Lovasz(x, y)
         loss_crossentropy = self.CELoss(x, y)
-        return loss_lovasz + loss_crossentropy
+        total_loss = loss_lovasz + loss_crossentropy
+        loss = {'loss': float(total_loss.detach().cpu().numpy()),
+                'lovasz': float(loss_lovasz.detach().cpu().numpy()),
+                'crossetropy': float(loss_crossentropy.detach().cpu().numpy())}
+        return total_loss, loss
 
 
 class mIoU(nn.Module):

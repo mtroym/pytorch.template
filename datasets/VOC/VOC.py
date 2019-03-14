@@ -6,7 +6,6 @@ from PIL import Image
 from torch.utils.data import Dataset
 
 import datasets.transforms as t
-from datasets.VOC.decodeseg import encode_segmap
 
 
 # https://github.com/nyoki-mtl/pytorch-segmentation/blob/master/src/train.py

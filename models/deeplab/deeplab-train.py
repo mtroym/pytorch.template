@@ -1,14 +1,11 @@
 import os
 import time
 
-import numpy as np
 import torch
 import torch.optim as optim
 from torch.autograd import Variable
 
-from util.progbar import progbar
 from util.summaries import BoardX
-from util.utils import RunningAverage
 
 
 # allAcc = {}
@@ -46,8 +43,8 @@ class Trainer:
         self.log_num = opt.logNum
 
     def train(self, trainLoader, epoch):
-        self.model.train()
         print("=> Training epoch")
+        self.model.train()
         self.bb.start(len(trainLoader))
         for i, (input, target) in enumerate(trainLoader):
             if self.opt.debug and i > 1:  # check debug.
@@ -60,7 +57,7 @@ class Trainer:
 
             output = self.model(inputV)
 
-            loss = self.criterion(output, targetV.long())
+            loss, loss_record = self.criterion(output, targetV.long())
 
             self.optimizer.zero_grad()
             loss.mean().backward()
@@ -69,9 +66,7 @@ class Trainer:
             _, preds = torch.max(output, 1)
 
             runTime = time.time() - start
-            runningLoss = torch.mean(loss).detach().cpu().numpy()
-            log = self.bb.update(runningLoss, runTime, preds.detach().cpu().numpy(),
-                                 targetV.detach().cpu().numpy(), 'train', i, epoch)
+            log = self.bb.update(loss_record, runTime, preds, targetV, 'train', i, epoch)
             self.logger['train'].write(log)
 
         log = self.bb.finish(epoch)
@@ -79,8 +74,8 @@ class Trainer:
         return self.bb.avgLoss()
 
     def test(self, trainLoader, epoch):
-        self.model.eval()
         print("=> Validating epoch")
+        self.model.eval()
         self.bb.start(len(trainLoader))
         for i, (input, target) in enumerate(trainLoader):
             if self.opt.debug and i > 1:  # check debug.
@@ -92,16 +87,13 @@ class Trainer:
                 if self.opt.GPU:
                     inputV, targetV = inputV.cuda(), targetV.cuda()
                 output = self.model(inputV)
-                loss = self.criterion(output, targetV.long())
+                _, loss_record = self.criterion(output, targetV.long())
                 _, preds = torch.max(output, 1)
 
-            # LOG ===
             runTime = time.time() - start
-            runningLoss = torch.mean(loss).detach().cpu().numpy()
-            log = self.bb.update(runningLoss, runTime, preds.detach().cpu().numpy(),
-                                 targetV.detach().cpu().numpy(), 'val', i, epoch)
+            log = self.bb.update(loss_record, runTime, preds, targetV, 'val', i, epoch)
             self.logger['val'].write(log)
-            # END LOG ===
+
         log = self.bb.finish(epoch)
         self.logger['train'].write(log)
         return self.bb.avgLoss()
