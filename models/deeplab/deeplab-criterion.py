@@ -151,7 +151,6 @@ def compute_ious(pred, label, classes, ignore_index=255, only_present=True):
             ious['IoU#' + str(c)] = float(intersection) / float(union)
         else:
             ious['IoU#' + str(c)] = np.nan
-    print(ious)
     return ious
 
 
