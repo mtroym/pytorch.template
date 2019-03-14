@@ -49,7 +49,7 @@ class BoardX:
             self.writer.add_scalars(self.suffix + '/scalar/Acc' + '_' + split, self.avgAcces(split), logger_idx)
         log = updateLog(epoch, i, self.lenDS, time, self.avgLoss(split), self.avgAcces(split))
         self.progbar.update(i + 1,
-                            [('Time', time)] + list(self.avgLoss(split).items()) + list(self.avgAcces(split).items()))
+                            list(time.items()) + list(self.avgLoss(split).items()) + list(self.avgAcces(split).items()))
         return log
 
     def finish(self, epoch, split):

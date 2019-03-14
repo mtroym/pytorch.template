@@ -62,6 +62,7 @@ class Trainer:
                 inputs, target = inputs.cuda(), target.cuda()
             inputV, targetV = Variable(inputs), Variable(target)
 
+            datatime = time.time() - start
             # * Feed in nets*
             if TRAIN:
                 self.optimizer.zero_grad()
@@ -75,8 +76,9 @@ class Trainer:
                 _, preds = torch.max(output, 1)
                 metrics = self.metrics(preds, targetV)
 
-            runTime = time.time() - start
-            log = self.bb.update(loss_record, runTime, metrics, split, i, epoch)
+            runTime = time.time() - start - datatime
+            log = self.bb.update(loss_record, {'TD': datatime, 'TR': runTime}, metrics, split, i, epoch)
+            del loss, loss_record, output
             self.logger['train'].write(log)
 
         log = self.bb.finish(epoch, split)

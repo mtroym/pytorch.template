@@ -13,7 +13,7 @@ def parse():
     parser.add_argument('--debug', default=False, type=str2bool, help='Debug mode')
     parser.add_argument('--manualSeed', default=0, type=int, help='manual seed')
     parser.add_argument('--GPU', default=True, type=str2bool, help='Use GPU')
-    parser.add_argument('--GPUs', default='1', type=str, help='ID of GPUs to use, seperate by ,')
+    parser.add_argument('--GPUs', default='0', type=str, help='ID of GPUs to use, seperate by ,')
     parser.add_argument('--backend', default='cudnn', type=str, help='backend', choices=['cudnn', 'cunn'])
     parser.add_argument('--cudnn', default='fastest', type=str, help='cudnn setting',
                         choices=['fastest', 'deterministic', 'default'])
@@ -72,6 +72,7 @@ def parse():
     opt = parser.parse_args()
 
     opt.GPU = opt.GPU & torch.cuda.is_available()
+    print("GPU available! found `{}` !".format(torch.cuda.get_device_name()))
     if opt.GPU:
         os.environ["CUDA_VISIBLE_DEVICES"] = opt.GPUs
         cudnn.benchmark = True
@@ -83,6 +84,12 @@ def parse():
     if opt.GPU:
         torch.cuda.manual_seed_all(opt.manualSeed)
 
+    if opt.dataset == 'segTHOR':
+        opt.numClasses = 5
+    elif opt.dataset == 'VOC':
+        opt.numClasses = 21
+    elif opt.dataset == 'cityscapes':
+        opt.numClasses = 19
     # for arnold script.
     print('**************** DEFINE SOME PATH *****************')
     print('\t-=> opt.data=' + opt.data)
