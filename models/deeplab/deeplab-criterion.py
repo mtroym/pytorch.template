@@ -1,7 +1,7 @@
 import SimpleITK as sitk
 import numpy as np
 import torch.nn as nn
-
+import torch
 from criterions.lovasz_loss import LovaszSoftmax
 
 # LOSS : return total_loss(float), loss_dict(dict()) -> {'total': loss, 'singleLoss1': loss}
@@ -137,14 +137,14 @@ def compute_ious(pred, label, classes, ignore_index=255, only_present=True):
             ious.append(np.nan)
             continue
         label_c = label == c
-        if only_present and np.sum(label_c) == 0:
+        pred_c = pred == c
+        if only_present and torch.sum(label_c) == 0:
             ious.append(np.nan)
             continue
-        pred_c = pred == c
-        intersection = np.logical_and(pred_c, label_c).sum()
-        union = np.logical_or(pred_c, label_c).sum()
+        intersection = (pred_c & label_c).sum()
+        union = (pred_c | label_c).sum()
         if union != 0:
-            ious.append(intersection / union)
+            ious.append(float((intersection / union).detach().cpu().numpy()))
     return ious if ious else [1]
 
 

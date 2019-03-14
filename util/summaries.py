@@ -59,7 +59,7 @@ class BoardX:
                 for class_i in range(1, len(metric_value)):
                     lower_key = 'IoU#{}'.format(class_i)
                     # metric have GPU tensors.
-                    lower_val = float(metric_value[class_i].detach().cpu().numpy())
+                    lower_val = float(metric_value[class_i])
                     # update...
                     IoU_dict['IoU#{}'.format(class_i)] = lower_val
                     self.avgAcces[lower_key].update(lower_val)
