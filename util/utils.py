@@ -17,7 +17,7 @@ class RunningAverage():
         self.index = 0
         self.len = len
         self.default = default
-        self.last = np.nan
+        self.last = default
 
     def update(self, val):
         self.total[self.index] = val
