@@ -148,9 +148,10 @@ def compute_ious(pred, label, classes, ignore_index=255, only_present=True):
         intersection = (pred_c & label_c).sum()
         union = (pred_c | label_c).sum()
         if union != 0:
-            ious['IoU#' + str(c)] = float((intersection * 1.0 / union).detach().cpu().numpy())
+            ious['IoU#' + str(c)] = float(intersection) / float(union)
         else:
             ious['IoU#' + str(c)] = np.nan
+    print(ious)
     return ious
 
 
