@@ -32,13 +32,15 @@ class BoardX:
         self.log_interval = int(lenDS / self.log_num)
 
     def update(self, lossRecord, time, metrics, split, i, epoch):
-        # TODO: separate the metrics operation out of this function.
+        # metrics -> {'m1': val, 'm2': np.nan, ... }
+        # maybe contain nan values.
         # lossRecord -> {'loss': val, 'combined_1': val, 'combined_2':val}
         # must have one val which key is `loss` !
         logger_idx = np.floor(i // self.log_interval) + (epoch - 1) * self.log_num
-        flag = 0
-        if (i - 1) % self.log_interval == 0:
-            flag = 1
+        flag = (i - 1) % self.log_interval == 0
+        if self.log_num == 1:
+            logger_idx = epoch
+            flag = i == self.log_interval - 1
         self.avgLoss.update(lossRecord)
         self.avgAcces.update(metrics)
 
