@@ -64,8 +64,8 @@ class IoU(nn.Module):
         self.ignore = ignore
         self.per_image = per_image
 
-    def forward(self, *input):
-        dict_iou =  compute_ious(input[0], input[1], classes=self.C, ignore_index=self.ignore, only_present=True)
+    def forward(self, x, y):
+        dict_iou =  compute_ious(x, y, classes=self.C, ignore_index=self.ignore, only_present=True)
         val = 0.0
         count = 0.0
         for k, v in enumerate(dict_iou):
@@ -153,7 +153,9 @@ def compute_ious(pred, label, classes, ignore_index=255, only_present=True):
         intersection = (pred_c & label_c).sum()
         union = (pred_c | label_c).sum()
         if union != 0:
-            ious['IoU#' + str(c)] = float((intersection / union).detach().cpu().numpy())
+            ious['IoU#' + str(c)] = float(intersection) / float(union)
+        else:
+            ious['IoU#' + str(c)] = np.nan
     return ious
 
 
