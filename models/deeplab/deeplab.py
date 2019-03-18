@@ -5,7 +5,7 @@ import torch.nn.functional as F
 
 import models.LibTorchLayer as tl
 from models.backbones import build_backbone
-# from models.backbones.Xception import Xception
+from models.backbones import Xception
 from models.deeplab.ASPP import ASPP
 # from modeling.sync_batchnorm.batchnorm import SynchronizedBatchNorm2d
 from models.deeplab.ASPP import build_aspp
@@ -17,6 +17,46 @@ from models.deeplab.Decoder import build_decoder
 # from torch import nn
 
 SynchronizedBatchNorm2d = nn.BatchNorm2d
+
+class _ASPP(nn.Module):
+    # have bias and relu, no bn
+    def __init__(self, in_channel=512, depth=256):
+        super(_ASPP).__init__()
+        # global average pooling : init nn.AdaptiveAvgPool2d ;also forward torch.mean(,,keep_dim=True)
+        self.mean = nn.AdaptiveAvgPool2d((1, 1))
+        self.conv = nn.Sequential(nn.Conv2d(in_channel, depth, 1, 1), nn.ReLU(inplace=True))
+
+        self.atrous_block1 = nn.Sequential(nn.Conv2d(in_channel, depth, 1, 1),
+                                           nn.ReLU(inplace=True))
+        self.atrous_block6 = nn.Sequential(nn.Conv2d(in_channel, depth, 3, 1, padding=6, dilation=6),
+                                           nn.ReLU(inplace=True))
+        self.atrous_block12 = nn.Sequential(nn.Conv2d(in_channel, depth, 3, 1, padding=12, dilation=12),
+                                            nn.ReLU(inplace=True))
+        self.atrous_block18 = nn.Sequential(nn.Conv2d(in_channel, depth, 3, 1, padding=18, dilation=18),
+                                            nn.ReLU(inplace=True))
+
+        self.conv_1x1_output = nn.Sequential(nn.Conv2d(depth * 5, depth, 1, 1), nn.ReLU(inplace=True))
+
+    def forward(self, x):
+        size = x.shape[2:]
+
+        image_features = self.mean(x)
+        image_features = self.conv(image_features)
+        image_features = F.interpolate(image_features, size=size, mode='bilinear', align_corners=True)
+
+        atrous_block1 = self.atrous_block1(x)
+
+        atrous_block6 = self.atrous_block6(x)
+
+        atrous_block12 = self.atrous_block12(x)
+
+        atrous_block18 = self.atrous_block18(x)
+
+        net = self.conv_1x1_output(torch.cat([image_features, atrous_block1, atrous_block6,
+                                              atrous_block12, atrous_block18], dim=1))
+        return net
+
+
 
 
 class DeepLab(nn.Module):
@@ -79,11 +119,10 @@ class _DeepLab(nn.Module):
         super(_DeepLab, self).__init__()
         self.input_dim = input_dim
         if backbone == 'Xception':
-            pass
-            # self.backbone = BACKBONE[backbone](input_dim=self.input_dim, outstride=outstride)
+            self.backbone = Xception.AlignedXception(output_stride=outstride, BatchNorm=nn.BatchNorm2d, pretrained=False)
         self.x4size = (int(np.ceil(inputsize[0] / 4)), int(np.ceil(inputsize[1] / 4)))
         self.xoutsize = (int(np.ceil(inputsize[0] / outstride)), int(np.ceil(inputsize[1] / outstride)))
-        self.ASPP = ASPP(2048, 256, size=self.xoutsize)
+        self.ASPP = ASPP._ASPP(2048, 256, size=self.xoutsize)
         self.inputsize = inputsize
         self.x4conv = tl.SeparableConv2d(128, 128, kernel_size=(1, 1), stride=1, bias=False, bn=False)
         self.decoder_conv = tl.SeparableConv2d(256 + 128, classes, kernel_size=(3, 3), bias=False, bn=False)
@@ -205,8 +244,12 @@ refers_to = "https://github.com/bonlime/keras-deeplab-v3-plus/blob/master/model.
 #     print("output shape", net(x).shape)
 
 if __name__ == "__main__":
-    model = DeepLab(backbone='Xception', output_stride=16)
-
+    import opts
+    opt = opts.parse()
+    opt.input_dim = 3
+    opt.inputSize = (513, 513)
+    model = _DeepLab(input_dim=opt.input_dim, inputsize=opt.inputSize, backbone='Xception', outstride=8,
+                    classes=opt.numClasses)
     # model.load_state_dict(torch.load('/Users/seolen/Seolen-Code/Ipy/Pascal-Unet/results/pretrain/deeplab-resnet.pth.tar')['state_dict'])
 
     model.eval()
