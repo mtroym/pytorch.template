@@ -72,7 +72,7 @@ def parse():
     opt = parser.parse_args()
 
     opt.GPU = opt.GPU & torch.cuda.is_available()
-    print("GPU available! found `{}` !".format(torch.cuda.get_device_name()))
+    print("GPU available! found `{}` !".format(torch.cuda.get_device_name(0)))
     if opt.GPU:
         os.environ["CUDA_VISIBLE_DEVICES"] = opt.GPUs
         cudnn.benchmark = True
