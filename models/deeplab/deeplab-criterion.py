@@ -68,10 +68,10 @@ class IoU(nn.Module):
         dict_iou =  compute_ious(x, y, classes=self.C, ignore_index=self.ignore, only_present=True)
         val = 0.0
         count = 0.0
-        for k, v in enumerate(dict_iou):
-            if np.isnan(v):
+        for k in dict_iou:
+            if np.isnan(dict_iou[k]):
                 continue
-            val += v
+            val += dict_iou[k]
             count += 1
         return dict_iou.update({'mIoU':val / (count + 1e-5)})
 
@@ -254,5 +254,7 @@ if __name__ == '__main__':
     a['x'] = 1
     a['y'] = 2
     a['z'] = np.nan
+    for k in a:
+        print(k)
     a.update({'m':np.nanmean(np.array(list(a.values())))})
     print(a)
