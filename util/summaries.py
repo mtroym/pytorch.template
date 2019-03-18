@@ -6,8 +6,10 @@ from util.utils import RunningAverageDict
 
 
 def updateLog(epoch, i, length, time, err, Acc):
-    log = 'Epoch: [%d][%d/%d] Time %1.3f ' % (
-        epoch, i, length, time)
+    log = 'Epoch: [%d][%d/%d]' % (
+        epoch, i, length)
+    for T in time:
+        log += T + " %1.4f  " % time[T]
     for loss in err:
         log += loss + " %1.4f  " % err[loss]
     for metric in Acc:
@@ -32,13 +34,15 @@ class BoardX:
         self.log_interval = int(lenDS / self.log_num)
 
     def update(self, lossRecord, time, metrics, split, i, epoch):
-        # TODO: separate the metrics operation out of this function.
+        # metrics -> {'m1': val, 'm2': np.nan, ... }
+        # maybe contain nan values.
         # lossRecord -> {'loss': val, 'combined_1': val, 'combined_2':val}
         # must have one val which key is `loss` !
         logger_idx = np.floor(i // self.log_interval) + (epoch - 1) * self.log_num
-        flag = 0
-        if (i - 1) % self.log_interval == 0:
-            flag = 1
+        flag = (i - 1) % self.log_interval == 0
+        if self.log_num == 1:
+            logger_idx = epoch
+            flag = i == self.log_interval - 1
         self.avgLoss.update(lossRecord)
         self.avgAcces.update(metrics)
 
@@ -47,7 +51,7 @@ class BoardX:
             self.writer.add_scalars(self.suffix + '/scalar/Acc' + '_' + split, self.avgAcces(split), logger_idx)
         log = updateLog(epoch, i, self.lenDS, time, self.avgLoss(split), self.avgAcces(split))
         self.progbar.update(i + 1,
-                            [('Time', time)] + list(self.avgLoss(split).items()) + list(self.avgAcces(split).items()))
+                            list(time.items()) + list(self.avgLoss(split).items()) + list(self.avgAcces(split).items()))
         return log
 
     def finish(self, epoch, split):
