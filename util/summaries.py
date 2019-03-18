@@ -47,18 +47,25 @@ class BoardX:
         self.avgAcces.update(metrics)
 
         if flag == 1:
-            self.writer.add_scalars(self.suffix + '/scalar/Loss', self.avgLoss(split), logger_idx)
-            self.writer.add_scalars(self.suffix + '/scalar/Acc' + '_' + split, self.avgAcces(split), logger_idx)
-        log = updateLog(epoch, i, self.lenDS, time, self.avgLoss(split), self.avgAcces(split))
-        self.progbar.update(i + 1,
-                            list(time.items()) + list(self.avgLoss(split).items()) + list(self.avgAcces(split).items()))
+            self.writer.add_scalars(self.suffix + '/scalar/Loss', self.avgLoss(split, return_mean=False), logger_idx)
+            Acces = self.avgAcces(split)
+            for metric_name in self.opt.metrics:
+                ACC = {}
+                for k in Acces:
+                    if metric_name in k:
+                        ACC[k] = Acces[k]
+                self.writer.add_scalars(self.suffix + '/scalar/' + metric_name + '_' + split, ACC, logger_idx)
+        log = updateLog(epoch, i, self.lenDS, time, self.avgLoss(split, return_mean=False),
+                        self.avgAcces(split, return_mean=True))
+        self.progbar.update(i + 1, list(time.items()) + list(self.avgLoss(split, return_mean=False).items()) + list(
+            self.avgAcces(split, return_mean=True).items()))
         return log
 
     def finish(self, epoch, split):
         log = '\n\n* Finished training epoch # %d *\n\n' % epoch
         log += '* METRICS:'
         log += str(self.avgAcces(split)) + ' *\n\n* LOSSES: ' + str(
-            self.avgLoss(split)) + '\n\n'
+            self.avgLoss(split, return_mean=False)) + '\n\n'
         print(log)
         return log
 

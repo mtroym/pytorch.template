@@ -69,12 +69,16 @@ class RunningAverageDict:
     loss_avg.update({'name1': 2, 'name2':3, 'name3': np.nan})
     loss_avg.update({'name1': 6, 'name2':np.nan, 'name3':np.nan})
     loss_avg() = {'name1':4, 'name2':3, 'name3': np.nan}
-    loss_avg('fuck') = {'name1_fuck':4, 'name2_fuck':3, 'name3_fuck': np.nan}
+    loss_avg('fuck', return_mean=False) = {'name1_fuck':4, 'name2_fuck':3, 'name3_fuck': np.nan}
+    loss_avg('fuck') = {'name1_fuck':4, 'name2_fuck':3, 'name3_fuck': np.nan, 'mean':3.5}
+    loss_avg('fuck', mean_key='m_name') = {'name1_fuck':4, 'name2_fuck':3, 'name3_fuck': np.nan, 'm_name':3.5}
     ```
     """
+
     def __init__(self, default=0.0):
         self.total = None
         self.default = default
+        self.metrics_name = {}
 
     def update(self, val):
         '''val is a dict'''
@@ -83,13 +87,21 @@ class RunningAverageDict:
             for keys in self.total:
                 self.total[keys] = RunningAverageNaN(default=self.default)
         for keys in self.total:
+            name = keys.split('#')[0]
+            self.metrics_name[name] = [0.0, 0.0]
             self.total[keys].update(val[keys])
 
-    def __call__(self, suffix=''):
+    def __call__(self, suffix='', return_mean=True, mean_key='mean'):
         return_dict = dict()
         for keys in self.total:
             val = '_'.join((keys, suffix)) if suffix != '' else keys
             return_dict[val] = self.total[keys]()
+            name = keys.split('#')[0]
+            self.metrics_name[name][0] += return_dict[val]
+            self.metrics_name[name][1] += 1
+        if return_mean:
+            for keys in self.metrics_name:
+                return_dict.update({'m' + keys: self.metrics_name[keys][0] / (self.metrics_name[keys][1] + 1e-10)})
         return return_dict
 
 

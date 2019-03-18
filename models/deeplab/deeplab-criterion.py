@@ -65,15 +65,17 @@ class IoU(nn.Module):
         self.per_image = per_image
 
     def forward(self, x, y):
-        dict_iou =  compute_ious(x, y, classes=self.C, ignore_index=self.ignore, only_present=True)
-        val = 0.0
-        count = 0.0
-        for k in dict_iou:
-            if np.isnan(dict_iou[k]):
-                continue
-            val += dict_iou[k]
-            count += 1
-        return dict_iou.update({'mIoU':val / (count + 1e-5)})
+        dict_iou = compute_ious(x, y, classes=self.C, ignore_index=self.ignore, only_present=True)
+        # val = 0.0
+        # count = 0.0
+        # for k in dict_iou:
+        #     if np.isnan(dict_iou[k]):
+        #         continue
+        #     val += dict_iou[k]
+        #     count += 1
+        # dict_iou.update({'mIoU': val / (count + 1e-5)})
+        return dict_iou
+
 
 class Hausdorff(nn.Module):
     def __init__(self, C, ignore=-100):
@@ -83,7 +85,6 @@ class Hausdorff(nn.Module):
         self.hausdorffcomputer = [sitk.HausdorffDistanceImageFilter() for _ in range(C)]
 
     def forward(self, x, y):
-        print(x, y)
         quality = {}
         total_val = 0.0
         count = 0.0
@@ -104,27 +105,31 @@ class Hausdorff(nn.Module):
 
 
 class DiceCoeff(nn.Module):
-    def __init__(self, C, ignore=-100, per_image=False):
+    def __init__(self, C, ignore=-100, only_present=True):
         super(DiceCoeff, self).__init__()
         self.C = C
         self.ignore = ignore
-        self.per_image = per_image
-        self.dicecomputer = [sitk.LabelOverlapMeasuresImageFilter() for _ in range(C)]
+        self.only_present = only_present
 
-    def forward(self, x, y):
+    def forward(self, pred, label):
+        pred[label == self.ignore] = 0
         quality = {}
-        total_val = 0.0
         count = 0.0
         for i in range(self.C):
             if i == self.ignore:
                 continue
-            P = sitk.GetImageFromArray((x.astype(np.int) == i).astype(np.int))
-            GT = sitk.GetImageFromArray((y.astype(np.int) == i).astype(np.int))
-            self.dicecomputer[i].Execute(P, GT)
-            quality["DC#" + str(i)] = self.dicecomputer[i].GetDiceCoefficient()
-            total_val += quality["DC#" + str(i)]
-            count += 1
-        quality["mDC"] = total_val / (count + 1e-10)
+            label_c = label == i
+            pred_c = pred == i
+            if self.only_present and torch.sum(label_c) == 0:
+                quality['Dice#' + str(i)] = np.nan
+                continue
+            overlap = (pred_c & label_c).sum()
+            unions = pred_c.sum() + label_c.sum()
+            if unions != 0:
+                quality["Dice#" + str(i)] = 2 * float(overlap) / float(unions + 1e-10)
+                count += 1
+            else:
+                quality["Dice#" + str(i)] = np.nan
         return quality
 
 
@@ -176,7 +181,7 @@ class Metrics(nn.Module):
                 for key in metrics_value:
                     out[key] = metrics_value[key]
             else:
-                assert isinstance(metrics_value, float), 'Error of the metric value type'
+                assert isinstance(metrics_value, float), 'Error of the metric value type {}'.format(type(metrics_value))
                 out[m] = metrics_value
         return out
 
@@ -256,5 +261,5 @@ if __name__ == '__main__':
     a['z'] = np.nan
     for k in a:
         print(k)
-    a.update({'m':np.nanmean(np.array(list(a.values())))})
+    a.update({'m': np.nanmean(np.array(list(a.values())))})
     print(a)

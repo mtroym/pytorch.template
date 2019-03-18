@@ -20,5 +20,6 @@ pytorch1.0.0 training framework - in progress
 - [ ] DAVIS 2017 - video segmentation dataset
 
 ## eval metrics/criterion
-- [x] mIoU - use LovaszSoftmax Package. // Forgotten the source
+- [x] mIoU 
+- [x] IoU , contains mIoU
 - [x] segTHOR's. Hausdorff/ Dice from SimpleITK package. 
