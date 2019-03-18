@@ -65,8 +65,15 @@ class IoU(nn.Module):
         self.per_image = per_image
 
     def forward(self, *input):
-        return compute_ious(input[0], input[1], classes=self.C, ignore_index=self.ignore, only_present=True)
-
+        dict_iou =  compute_ious(input[0], input[1], classes=self.C, ignore_index=self.ignore, only_present=True)
+        val = 0.0
+        count = 0.0
+        for k, v in enumerate(dict_iou):
+            if np.isnan(v):
+                continue
+            val += v
+            count += 1
+        return dict_iou.update({'mIoU':val / (count + 1e-5)})
 
 class Hausdorff(nn.Module):
     def __init__(self, C, ignore=-100):
@@ -102,24 +109,22 @@ class DiceCoeff(nn.Module):
         self.C = C
         self.ignore = ignore
         self.per_image = per_image
-
         self.dicecomputer = [sitk.LabelOverlapMeasuresImageFilter() for _ in range(C)]
 
     def forward(self, x, y):
         quality = {}
         total_val = 0.0
         count = 0.0
-        x = x * 0
         for i in range(self.C):
             if i == self.ignore:
                 continue
             P = sitk.GetImageFromArray((x.astype(np.int) == i).astype(np.int))
             GT = sitk.GetImageFromArray((y.astype(np.int) == i).astype(np.int))
             self.dicecomputer[i].Execute(P, GT)
-            quality["Dice_" + str(i)] = self.dicecomputer[i].GetDiceCoefficient()
-            total_val += quality["Dice_" + str(i)]
+            quality["DC#" + str(i)] = self.dicecomputer[i].GetDiceCoefficient()
+            total_val += quality["DC#" + str(i)]
             count += 1
-        quality["AVG_Dice"] = total_val / (count + 1e-10)
+        quality["mDC"] = total_val / (count + 1e-10)
         return quality
 
 
@@ -244,6 +249,8 @@ if __name__ == '__main__':
     # for m in M.name:
     #     print(M[m](x, y))
     a = dict()
-    a['x'] = 10
-    a['y'] = np.nan
-    print(np.isnan(np.array(list(a.values()))))
+    a['x'] = 1
+    a['y'] = 2
+    a['z'] = np.nan
+    a.update({'m':np.nanmean(np.array(list(a.values())))})
+    print(a)
