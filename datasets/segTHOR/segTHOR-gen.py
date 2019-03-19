@@ -6,7 +6,8 @@ import torch
 
 from util.progbar import progbar
 
-def exec(opt, cacheFilePath):
+
+def exec(opt, cache_file_path):
     assert os.path.exists(opt.data), 'Data directory not found: ' + opt.data
     nib.Nifti1Header.quaternion_threshold = - np.finfo(np.float32).eps * 10  # 松弛一下限
     training_data_path = os.path.join(opt.data, 'train')
@@ -18,26 +19,27 @@ def exec(opt, cacheFilePath):
     print("************* Generating list of data ....**************")
     info = {
         'basedir': training_data_path,
-        'val': loadPaths(opt, training_data_path, val_pa, 'val'),
-        'train': loadPaths(opt, training_data_path, train_pa, 'train')
+        'val': load_paths(opt, training_data_path, val_pa, 'val'),
+        'train': load_paths(opt, training_data_path, train_pa, 'train')
     }
-    print("^^^^^^^^^^^^ Saved the cached file in {} ^^^^^^^^^^^^^".format(cacheFilePath))
-    torch.save(info, cacheFilePath)
+    print("^^^^^^^^^^^^ Saved the cached file in {} ^^^^^^^^^^^^^".format(cache_file_path))
+    torch.save(info, cache_file_path)
     return info
 
 
-def loadPaths(opt, base, pa, split):
+def load_paths(opt, base, pa, split):
+    # ignoring the file with no label.
     print('\t-> processing {} data'.format(split))
     X = []
     bar = progbar(len(pa), width=opt.barwidth)
     for idx, patients in enumerate(pa):
         # file contains GT.nii // patient_xx.nii.gz
-        GT_path = os.path.join(base, patients, 'GT.nii.gz')
+        gt_path = os.path.join(base, patients, 'GT.nii.gz')
         img_path = os.path.join(base, patients, patients + '.nii.gz')
-        img = nib.load(img_path).get_data()
-        for i in range(img.shape[2]):
-            if np.sum(img[:,:,i]) == 0 and split == 'train':
+        gt = nib.load(gt_path).get_data()
+        for i in range(gt.shape[2]):
+            if np.sum(gt[:, :, i]) == 0 and split == 'train':
                 continue
-            X.append(((patients, i), GT_path, img_path))
+            X.append(((patients, i), gt_path, img_path))
         bar.update(idx + 1)
     return X
