@@ -4,7 +4,7 @@ import time
 import torch
 import torch.optim as optim
 from torch.autograd import Variable
-
+import numpy
 from util.summaries import BoardX
 
 
@@ -45,6 +45,7 @@ class Trainer:
     def processing(self, dataloader, epoch, split):
         print('=> {}ing epoch # {}'.format(split, epoch))
         TRAIN = split == 'train'
+        save_pred = True
         if TRAIN:
             self.model.train()
         else:  # VAL
@@ -74,6 +75,9 @@ class Trainer:
             # * Eval *
             with torch.no_grad():
                 _, preds = torch.max(output, 1)
+                if save_pred:
+                    name = 'val_pred{}_{}.npy'.format(epoch, i)
+                    numpy.save(name, preds.detach().cpu().numpy())
                 metrics = self.metrics(preds, targetV)
 
             runTime = time.time() - start - datatime
