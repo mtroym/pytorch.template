@@ -4,7 +4,7 @@ import time
 import torch
 import torch.optim as optim
 from torch.autograd import Variable
-
+import numpy
 from util.summaries import BoardX
 
 
@@ -45,6 +45,7 @@ class Trainer:
     def processing(self, dataloader, epoch, split):
         print('=> {}ing epoch # {}'.format(split, epoch))
         TRAIN = split == 'train'
+        save_pred = True
         if TRAIN:
             self.model.train()
         else:  # VAL
@@ -54,7 +55,9 @@ class Trainer:
             if self.opt.debug and i > 1:  # check debug.
                 break
             start = time.time()
-
+            if save_pred:
+                name = 'val_pred{}_{}.npy'.format(epoch, i)
+                numpy.save(name.replace('pred', 'gt'), target)
             # * Data preparation *
             # inputs.requires_grad_(TRAIN)
             # target.requires_grad_(TRAIN)
@@ -66,20 +69,24 @@ class Trainer:
             # * Feed in nets*
             if TRAIN:
                 self.optimizer.zero_grad()
-            output = self.model(inputV)
-            loss, loss_record = self.criterion(output, targetV.long())
-            if TRAIN:
-                loss.mean().backward()
-                self.optimizer.step()
-            # * Eval *
-            with torch.no_grad():
-                _, preds = torch.max(output, 1)
-                metrics = self.metrics(preds, targetV)
+            if not save_pred:
+                output = self.model(inputV)
+                loss, loss_record = self.criterion(output, targetV.long())
+                if TRAIN:
+                    loss.mean().backward()
+                    self.optimizer.step()
+                # * Eval *
+                with torch.no_grad():
+                    _, preds = torch.max(output, 1)
+                    # if save_pred:
+                    #     name = 'val_pred{}_{}.npy'.format(epoch, i)
+                    #     numpy.save(name.replace('pred', 'gt'), target)
+                    metrics = self.metrics(preds, targetV)
 
-            runTime = time.time() - start - datatime
-            log = self.bb.update(loss_record, {'TD': datatime, 'TR': runTime}, metrics, split, i, epoch)
-            del loss, loss_record, output
-            self.logger['train'].write(log)
+                runTime = time.time() - start - datatime
+                log = self.bb.update(loss_record, {'TD': datatime, 'TR': runTime}, metrics, split, i, epoch)
+                del loss, loss_record, output
+                self.logger['train'].write(log)
 
         log = self.bb.finish(epoch, split)
         self.logger[split].write(log)
