@@ -41,5 +41,7 @@ def load_paths(opt, base, pa, split):
             if np.sum(gt[:, :, i]) == 0 and split == 'train':
                 continue
             X.append(((patients, i), gt_path, img_path))
+            if i == gt.shape[2] - 1 and (split == 'val' or split == 'test'):  # last slice
+                X.append(((patients, -1), None, None))
         bar.update(idx + 1)
     return X

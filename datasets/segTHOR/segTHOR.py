@@ -19,18 +19,18 @@ class SegTHOR(Dataset):
         self.img_slice = []
         self.GT_slice = []
         if self.DSmode == 'mem':
-            Last_PID = -1
-            Last_P = None
-            for (pid, sid), gtp, p in self.pathData:
-                if pid != Last_PID:
-                    Last_P = nib.load(p).get_fdata(), nib.load(gtp).get_data()
+            last_patient_id = -1
+            last_patient = None
+            for (patient_id, sid), gtp, p in self.pathData:
+                if patient_id != last_patient_id:
+                    last_patient = nib.load(p).get_fdata(), nib.load(gtp).get_data()
                 else:
                     pass
-                img = Last_P[0][:, :, sid]
-                GT = Last_P[1][:, :, sid]
+                img = last_patient[0][:, :, sid]  # image
+                gt = last_patient[1][:, :, sid]  # ground truth
                 self.img_slice.append(img)
-                self.GT_slice.append(GT)
-                Last_PID = pid
+                self.GT_slice.append(gt)
+                last_patient_id = patient_id
         else:  # 'file'
             pass
 
@@ -38,15 +38,16 @@ class SegTHOR(Dataset):
         if self.DSmode == 'file':
             (pid, sid), gtp, p = self.pathData[index]
             img = nib.load(p).get_fdata()[:, :, sid]
-            GT = nib.load(gtp).get_data()[:, :, sid]
+            gt = nib.load(gtp).get_data()[:, :, sid]
+            # TODO: change to eval code.
         else:  # mem
             img = self.img_slice[index]
-            GT = self.GT_slice[index]
+            gt = self.GT_slice[index]
 
-        img, GT = self._transform(img, GT)
+        img, gt = self._transform(img, gt)
         img_ = np.array([img, img, img])
         image = torch.from_numpy(img_).float()
-        target = torch.from_numpy(GT)
+        target = torch.from_numpy(gt)
         return image, target
 
     def __len__(self):
