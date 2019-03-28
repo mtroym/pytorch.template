@@ -48,7 +48,7 @@ class SegTHOR(Dataset):
         img_ = np.array([img, img, img])
         image = torch.from_numpy(img_).float()
         target = torch.from_numpy(gt)
-        return image, target
+        return (pid, sid), image, target
 
     def __len__(self):
         return len(self.pathData)

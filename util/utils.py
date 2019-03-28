@@ -1,4 +1,5 @@
 import copy
+import os
 
 import numpy as np
 
@@ -105,7 +106,70 @@ class RunningAverageDict:
         return return_dict
 
 
-if __name__ == '__main__':
+class StoreArray:
+    def __init__(self, length=1):
+        self.mem = [list() for _ in range(length)]
+        self.len = length
+        self.size = 0
+        self.index_dict = {}
+
+    def update(self, index, value_idx, value):
+        for i in range(len(index)):
+            self.update_single(index[i], int(value_idx[i]), value[i])
+
+    def update_single(self, index, value_idx, value):
+        data = (value_idx, value)
+        if index in self.index_dict:
+            self.mem[self.index_dict[index]].append(data)
+        else:
+            self.index_dict[index] = self.size
+            self.size += 1
+            self.mem[self.index_dict[index]].append(data)
+
+    def __len__(self):
+        return self.len
+
+    def save(self, index=None, split_save=True, save_path='.'):
+        save_all = index is None
+        for index_instance in self.index_dict.keys():
+            if save_all or (index_instance == index and not save_all):
+                if index_instance not in self.index_dict:
+                    continue
+                real_idx = self.index_dict[index_instance]
+                after_sorting = sorted(self.mem[real_idx], key=lambda x: x[0])
+                real_val = np.array(list(map(lambda x: x[1], after_sorting)))
+                path = os.path.join(save_path, str(index_instance))
+                if not os.path.exists(os.path.join(save_path, str(index_instance))):
+                    os.makedirs(os.path.join(save_path, str(index_instance)))
+                if split_save:
+                    for idx in range(len(after_sorting)):
+                        i = after_sorting[idx][0]
+                        name = '0' * (5 - len(str(i))) + str(i) + '.npy'
+                        np.save(os.path.join(path, name), real_val[idx])
+                else:
+                    np.save(os.path.join(path, 'pred.npy'), real_val)
+
+
+def test_store_array():
+    sa = StoreArray(10)
+    sa.update(3, 0, 'a')
+    sa.update(3, 100, 'f')
+    sa.update(3, 2, 'b')
+    sa.update(3, 3, 'c')
+    sa.update(3, 1500, 'g')
+    sa.update(4, 9, 'd')
+    sa.update(3, 78, 'e')
+    sa.update(100, 0, '0')
+    sa.update(100, 1, '1')
+    sa.update(100, 3, '3')
+    sa.update(100, 4, '4')
+    sa.update(100, 2, '2')
+    sa.update(100, 9, '9')
+    sa.update(9, 1, 'great')
+    sa.save(None, split_save=False, save_path='/Users/tony/PycharmProjects/Pred')
+
+
+def test_running_average():
     loss_avg = RunningAverageDict(0.0)
     loss_avg.update({'name1': 2, 'name2': 3, 'name3': np.nan})
     print(loss_avg('train'))
@@ -115,6 +179,10 @@ if __name__ == '__main__':
     loss_avg.update({'name1': 1, 'name2': np.nan, 'name3': 1})
     # loss_avg() = {'name1':4, 'name2':3, 'name3': np.nan}
     print(loss_avg('train'))
+
+
+if __name__ == '__main__':
+    test_store_array()
     #
 
     # loss = RunningAverageNaN(0.0)

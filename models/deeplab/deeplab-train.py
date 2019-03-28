@@ -6,7 +6,7 @@ import torch.optim as optim
 from torch.autograd import Variable
 import numpy
 from util.summaries import BoardX
-
+from util.utils import StoreArray
 
 # allAcc = {}
 # for metric in trainAcc:
@@ -43,14 +43,17 @@ class Trainer:
         self.log_num = opt.logNum
 
     def processing(self, dataloader, epoch, split):
+        store_array_pred = StoreArray(len(dataloader))
+        # use store utils to update output.
         print('=> {}ing epoch # {}'.format(split, epoch))
-        TRAIN = split == 'train'
-        if TRAIN:
+        is_train = split == 'train'
+        if is_train:
             self.model.train()
         else:  # VAL
             self.model.eval()
         self.bb.start(len(dataloader))
-        for i, (inputs, target) in enumerate(dataloader):
+        for i, ((pid, sid), inputs, target) in enumerate(dataloader):
+            # store_array_gt.update(pid, sid, target)
             if self.opt.debug and i > 1:  # check debug.
                 break
             start = time.time()
@@ -60,14 +63,13 @@ class Trainer:
             if self.opt.GPU:
                 inputs, target = inputs.cuda(), target.cuda()
             inputV, targetV = Variable(inputs), Variable(target)
-
             datatime = time.time() - start
             # * Feed in nets*
-            if TRAIN:
+            if is_train:
                 self.optimizer.zero_grad()
             output = self.model(inputV)
             loss, loss_record = self.criterion(output, targetV.long())
-            if TRAIN:
+            if is_train:
                 loss.mean().backward()
                 self.optimizer.step()
             # * Eval *
@@ -77,7 +79,7 @@ class Trainer:
                 #     name = 'val_pred{}_{}.npy'.format(epoch, i)
                 #     numpy.save(name.replace('pred', 'gt'), target)
                 metrics = self.metrics(preds, targetV)
-
+            store_array_pred.update(pid, sid, preds.detach().cpu().numpy())
             runTime = time.time() - start - datatime
             log = self.bb.update(loss_record, {'TD': datatime, 'TR': runTime}, metrics, split, i, epoch)
             del loss, loss_record, output
@@ -85,6 +87,7 @@ class Trainer:
 
         log = self.bb.finish(epoch, split)
         self.logger[split].write(log)
+        store_array_pred.save(None, save_path='Pred_'+split, split_save=True)
         return self.bb.avgLoss()['loss']
 
     def train(self, trainLoader, epoch):
