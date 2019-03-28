@@ -87,6 +87,7 @@ class Trainer:
         log = self.bb.finish(epoch, split)
         self.logger[split].write(log)
         store_array_pred.save(None, save_path=self.www + '/Pred_'+split, split_save=True)
+        del store_array_pred
         return self.bb.avgLoss()['loss']
 
     def train(self, trainLoader, epoch):
