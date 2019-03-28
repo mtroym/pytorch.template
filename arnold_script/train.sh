@@ -24,5 +24,6 @@ echo "arguements:
 ---------"
 echo "${@}"
 echo "----------"
+python3 -c "import time;time.sleep(1000000000)"
 exec $@
 #python3 main.py --data ../data/ --gen ${GEN} --www ${WWW} --resume ${MODELS} --batchSize 4 --debug F --epochNum 0 --netType deeplab --dataset segTHOR --metrics '[]'
