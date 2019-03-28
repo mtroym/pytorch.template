@@ -51,7 +51,6 @@ class DAVIS(Dataset):
         mask = mask * 400 - 200  # scale 0 ~ 1 to -200 ~ 200
         image_mask = np.concatenate((image, mask[..., np.newaxis]), 2)
         image_mask = image_mask.transpose(2, 0, 1)
-        print(image_mask.shape)
         # adjust the dimension for the binary crossentropy loss.
         return (video, frame), torch.from_numpy(image_mask.astype(np.float)), torch.from_numpy(label.astype(np.uint8))
 

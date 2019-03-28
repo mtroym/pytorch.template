@@ -41,6 +41,7 @@ class Trainer:
         self.bb = BoardX(opt, self.metrics, opt.hashKey, self.opt.logNum)
         self.bb_suffix = opt.hashKey
         self.log_num = opt.logNum
+        self.www = opt.www
 
     def processing(self, dataloader, epoch, split):
         store_array_pred = StoreArray(len(dataloader))
@@ -85,7 +86,7 @@ class Trainer:
 
         log = self.bb.finish(epoch, split)
         self.logger[split].write(log)
-        store_array_pred.save(None, save_path='Pred_'+split, split_save=True)
+        store_array_pred.save(None, save_path=self.www + '/Pred_'+split, split_save=True)
         return self.bb.avgLoss()['loss']
 
     def train(self, trainLoader, epoch):

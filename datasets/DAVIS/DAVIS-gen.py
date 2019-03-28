@@ -1,5 +1,5 @@
 import os
-import  numpy as np
+import numpy as np
 import torch
 from PIL import Image
 from util.progbar import progbar
@@ -22,7 +22,7 @@ def exec(opt, cacheFilePath):
 def processing(path, split):
     folders_all = []
     print("=> start collecting {} data....".format(split))
-    for yr in [2017]:
+    for yr in [2016, 2017]:
         image_set_path = os.path.join(path, 'ImageSets', str(yr), split + '.txt')
         with open(image_set_path, 'r') as f:
             folders = f.read()
