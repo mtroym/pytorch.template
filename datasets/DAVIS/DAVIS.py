@@ -1,6 +1,6 @@
 import copy
 import random
-
+import torch
 import cv2
 import matplotlib.pyplot as plt
 import numpy as np
@@ -22,15 +22,16 @@ class DAVIS(Dataset):
         return len(self.instance_all)
 
     def __getitem__(self, i):
-        image_path, gt_path, instance_num = self.instance_all[i]
+        image_path, gt_path, video, frame, instance_num = self.instance_all[i]
+        frame = int(frame[:-4])
         image = Image.open(image_path)
         ground_truth = Image.open(gt_path)
 
         ground_truth.load()
         image.load()
 
-        image.resize(self.input_size)
-        ground_truth.resize(self.input_size)
+        image = image.resize(self.input_size)
+        ground_truth = ground_truth.resize(self.input_size)
 
         image = np.array(image, dtype=np.uint8)
         ground_truth = np.array(ground_truth, dtype=np.uint8)
@@ -49,8 +50,10 @@ class DAVIS(Dataset):
             plt.show()
         mask = mask * 400 - 200  # scale 0 ~ 1 to -200 ~ 200
         image_mask = np.concatenate((image, mask[..., np.newaxis]), 2)
+        image_mask = image_mask.transpose(2, 0, 1)
+        print(image_mask.shape)
         # adjust the dimension for the binary crossentropy loss.
-        return image_mask, label
+        return (video, frame), torch.from_numpy(image_mask.astype(np.float)), torch.from_numpy(label.astype(np.uint8))
 
     @staticmethod
     def mask_transformation(mask):
@@ -79,5 +82,5 @@ class DAVIS(Dataset):
 def getInstance(info, opt, split):
     myInstance = DAVIS(info, opt, split)
     opt.inputSize = myInstance.input_size
-    opt.input_channel = myInstance.input_channel
+    opt.input_dim = myInstance.input_channel
     return myInstance

@@ -58,11 +58,9 @@ class Trainer:
                 break
             start = time.time()
             # * Data preparation *
-            # inputs.requires_grad_(TRAIN)
-            # target.requires_grad_(TRAIN)
             if self.opt.GPU:
                 inputs, target = inputs.cuda(), target.cuda()
-            inputV, targetV = Variable(inputs), Variable(target)
+            inputV, targetV = Variable(inputs).float(), Variable(target)
             datatime = time.time() - start
             # * Feed in nets*
             if is_train:

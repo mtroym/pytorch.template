@@ -60,7 +60,7 @@ class _ASPP(nn.Module):
 
 
 class DeepLab(nn.Module):
-    def __init__(self, backbone='Resnet', output_stride=16, num_classes=21,
+    def __init__(self, input_dim= 3, backbone='Resnet', output_stride=16, num_classes=21,
                  sync_bn=True, freeze_bn=False):
         super(DeepLab, self).__init__()
         if backbone == 'drn':
@@ -259,7 +259,7 @@ if __name__ == "__main__":
 
 
 def createModel(opt):
-    model = DeepLab(backbone=opt.backbone, output_stride=opt.outStride, num_classes=opt.numClasses, sync_bn=False,
+    model = DeepLab(input_dim=opt.input_dim, backbone=opt.backbone, output_stride=opt.outStride, num_classes=opt.numClasses, sync_bn=False,
                     freeze_bn=False)
     # model = Deeplab_v3(class_number=opt.numClasses, fine_tune=False)
     # model = _DeepLab(input_dim=opt.input_dim, inputsize=opt.inputSize, backbone='Xception', outstride=8,
