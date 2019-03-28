@@ -44,7 +44,7 @@ class Trainer:
         self.www = opt.www
 
     def processing(self, dataloader, epoch, split):
-        store_array_pred = StoreArray(len(dataloader))
+        store_array_pred = StoreArray(len(dataloader), self.www + '/Pred_'+split)
         # use store utils to update output.
         print('=> {}ing epoch # {}'.format(split, epoch))
         is_train = split == 'train'
@@ -78,6 +78,7 @@ class Trainer:
                 #     name = 'val_pred{}_{}.npy'.format(epoch, i)
                 #     numpy.save(name.replace('pred', 'gt'), target)
                 metrics = self.metrics(preds, targetV)
+            # update......
             store_array_pred.update(pid, sid, preds.detach().cpu().numpy())
             runTime = time.time() - start - datatime
             log = self.bb.update(loss_record, {'TD': datatime, 'TR': runTime}, metrics, split, i, epoch)
@@ -86,7 +87,6 @@ class Trainer:
 
         log = self.bb.finish(epoch, split)
         self.logger[split].write(log)
-        store_array_pred.save(None, save_path=self.www + '/Pred_'+split, split_save=True)
         del store_array_pred
         return self.bb.avgLoss()['loss']
 

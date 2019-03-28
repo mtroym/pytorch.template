@@ -107,15 +107,23 @@ class RunningAverageDict:
 
 
 class StoreArray:
-    def __init__(self, length=1):
+    def __init__(self, length=1, path='.'):
         self.mem = [list() for _ in range(length)]
         self.len = length
         self.size = 0
         self.index_dict = {}
+        self.path = path
 
     def update(self, index, value_idx, value):
         for i in range(len(index)):
-            self.update_single(index[i], int(value_idx[i]), value[i])
+            # self.update_single(index[i], int(value_idx[i]), value[i])
+            self.save_single(index[i], int(value_idx[i]), value[i], self.path)
+
+    def save_single(self, index, value_idx, value, save_path='.'):
+        name = '0' * (5 - len(str(value_idx))) + str(value_idx) + '.npy'
+        path = os.path.join(save_path, str(index))
+        np.save(os.path.join(path, name), value)
+
 
     def update_single(self, index, value_idx, value):
         data = (value_idx, value)
