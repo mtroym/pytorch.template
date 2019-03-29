@@ -122,8 +122,10 @@ class StoreArray:
     def save_single(self, index, value_idx, value, save_path='.'):
         name = '0' * (5 - len(str(value_idx))) + str(value_idx) + '.npy'
         path = os.path.join(save_path, str(index))
+        if not os.path.exists(path):
+            os.makedirs(os.path.join(path))
         np.save(os.path.join(path, name), value)
-
+        del value
 
     def update_single(self, index, value_idx, value):
         data = (value_idx, value)
