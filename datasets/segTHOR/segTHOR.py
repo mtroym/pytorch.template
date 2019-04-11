@@ -5,7 +5,8 @@ from torch.utils.data import Dataset
 
 
 class SegTHOR(Dataset):
-    def __init__(self, imageInfo, opt, split):
+    def __init__(self, imageInfo, opt, split, return_h):
+        self.return_h = return_h
         self.opt = opt
         self.split = split
         self.dir = imageInfo['basedir']
@@ -37,7 +38,9 @@ class SegTHOR(Dataset):
     def __getitem__(self, index):
         # load file path, and load file.
         (pid, sid), gtp, p = self.pathData[index]
-        img = nib.load(p).get_fdata()[:, :, sid]
+        img = nib.load(p).get_fdata()
+        all_num = img.shape[-1]
+        img = img[:, :, sid]
         gt = nib.load(gtp).get_data()[:, :, sid]
 
         # some preprocessing...
@@ -45,8 +48,14 @@ class SegTHOR(Dataset):
         img_ = np.array(img)
         image = torch.from_numpy(img_).float()
         target = torch.from_numpy(gt)
+        h = (sid*1.0)/all_num - 0.5
+        h = np.ones(1) * h
+        h = torch.from_numpy(h[np.newaxis, np.newaxis, ...]).float()
         # convert to tensor.
-        return (pid, sid), image[np.newaxis, ...], target
+        if self.return_h:
+            return (pid, sid), image[np.newaxis, ...], target, h
+        else:
+            return (pid, sid), image[np.newaxis, ...], target
 
     def __len__(self):
         return len(self.pathData)
@@ -57,7 +66,7 @@ class SegTHOR(Dataset):
         _img[img > high_range] = high_range
         _img[img < low_range] = low_range
 
-        _img /= 400
+        _img /= 255
         _img -= self.mean
         _img /= self.std
 
@@ -66,7 +75,10 @@ class SegTHOR(Dataset):
 
 
 def getInstance(info, opt, split):
-    myInstance = SegTHOR(info, opt, split)
+    return_h = False
+    if opt.netType == 'deeplabz':
+        return_h = True
+    myInstance = SegTHOR(info, opt, split, return_h)
     # print(myInstance.inputSize)
     opt.inputSize = myInstance.inputSize
     opt.input_dim = myInstance.input_dim

@@ -58,7 +58,7 @@ class Trainer:
             self.model.eval()
         self.bb.start(len(dataloader))
         processing_set = []
-        for i, ((pid, sid), inputs, target) in enumerate(dataloader):
+        for i, ((pid, sid), inputs, target, h) in enumerate(dataloader):
 
             # check debug.
             if self.opt.debug and i > 2:
@@ -70,13 +70,13 @@ class Trainer:
             start = time.time()
             # * Data preparation *
             if self.opt.GPU:
-                inputs, target = inputs.cuda(), target.cuda()
-            inputV, targetV = Variable(inputs).float(), Variable(target)
+                inputs, target, h = inputs.cuda(), target.cuda(), h.cuda()
+            inputV, targetV, hV = Variable(inputs).float(), Variable(target), Variable(h).float()
             datatime = time.time() - start
             # * Feed in nets*
             if is_train:
                 self.optimizer.zero_grad()
-            output = self.model(inputV)
+            output = self.model(inputV, hV)
             loss, loss_record = self.criterion(output, targetV.long())
             if is_train:
                 loss.mean().backward()
