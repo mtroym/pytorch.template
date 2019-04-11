@@ -4,9 +4,11 @@ import time
 import torch
 import torch.optim as optim
 from torch.autograd import Variable
-import numpy
+import numpy as np
 from util.summaries import BoardX
 from util.utils import StoreArray
+import SimpleITK as sitk
+from util.utils import RunningAverageDict
 
 # allAcc = {}
 # for metric in trainAcc:
@@ -43,20 +45,28 @@ class Trainer:
         self.log_num = opt.logNum
         self.www = opt.www
 
-    def processing(self, dataloader, epoch, split):
-        store_array_pred = StoreArray(len(dataloader), self.www + '/Pred_'+split)
+    def processing(self, dataloader, epoch, split, eval):
+        store_array_pred = StoreArray(len(dataloader), self.www + '/Pred_' + split)
+        store_array_gt = StoreArray(len(dataloader), self.www + '/GT_' + split)
         # use store utils to update output.
         print('=> {}ing epoch # {}'.format(split, epoch))
         is_train = split == 'train'
+        is_eval = eval == True
         if is_train:
             self.model.train()
         else:  # VAL
             self.model.eval()
         self.bb.start(len(dataloader))
+        processing_set = []
         for i, ((pid, sid), inputs, target) in enumerate(dataloader):
-            # store_array_gt.update(pid, sid, target)
-            if self.opt.debug and i > 1:  # check debug.
+
+            # check debug.
+            if self.opt.debug and i > 2:
                 break
+
+            # store the patients processed in this phase.
+            if pid not in processing_set:
+                processing_set += [*pid]
             start = time.time()
             # * Data preparation *
             if self.opt.GPU:
@@ -72,29 +82,77 @@ class Trainer:
                 loss.mean().backward()
                 self.optimizer.step()
             # * Eval *
+            metrics = {}
             with torch.no_grad():
                 _, preds = torch.max(output, 1)
-                # if save_pred:
-                #     name = 'val_pred{}_{}.npy'.format(epoch, i)
-                #     numpy.save(name.replace('pred', 'gt'), target)
-                metrics = self.metrics(preds, targetV)
-            # update......
+                if is_eval:
+                    metrics = self.metrics(preds, targetV)
+
+            # save each slice ...
             store_array_pred.update(pid, sid, preds.detach().cpu().numpy())
+            store_array_gt.update(pid, sid, targetV.detach().cpu().numpy())
+
             runTime = time.time() - start - datatime
             log = self.bb.update(loss_record, {'TD': datatime, 'TR': runTime}, metrics, split, i, epoch)
             del loss, loss_record, output
-            self.logger['train'].write(log)
+            self.logger[split].write(log)
 
-        del store_array_pred
-        log = self.bb.finish(epoch, split)
-        self.logger[split].write(log)
+        store_array_pred.save()
+        store_array_gt.save()
+        del store_array_pred, store_array_gt
+        self.logger[split].write(self.bb.finish(epoch, split))
+
+        set_ = sorted(processing_set)
+        output_path = self.www + '/Pred_' + split
+        gt_path = self.www + '/GT_' + split
+
+        hdf = sitk.HausdorffDistanceImageFilter()
+        dicef = sitk.LabelOverlapMeasuresImageFilter()
+        #  ------------ eval ------------
+        HDdict_mean = RunningAverageDict()
+        dicedict_mean = RunningAverageDict()
+        for instance in set_:
+            print(instance)
+            pred = np.load(os.path.join(output_path, instance + '.npy'))
+            gt = np.load(os.path.join(gt_path, instance + '.npy'))
+            # Post Processing.
+            # DenseCRF
+
+            # simpleITK HD dice
+            pred = sitk.GetImageFromArray(pred)
+            gt = sitk.GetImageFromArray(gt)
+            HDdict = {}
+            dicedict = {}
+            for i in range(self.opt.numClasses - 1):
+                HD = np.nan
+                dice = np.nan
+                try:
+                    hdf.Execute(pred == i + 1, gt == i + 1)
+                    HD = hdf.GetHausdorffDistance()
+                except:
+                    pass
+                try:
+                    dicef.Execute(pred == i + 1, gt == i + 1)
+                    dice = dicef.GetDiceCoefficient()
+                except:
+                    pass
+                HDdict['HD#' + str(i)] = HD
+                dicedict['Dice#' + str(i)] = dice
+            HDdict_mean.update(HDdict)
+            dicedict_mean.update(dicedict)
+            del pred, gt
+        # calculate mean
+        self.bb.writer.add_scalars(self.opt.hashKey + '/scalar/HD_{}/'.format(split), HDdict_mean(), epoch)
+        self.bb.writer.add_scalars(self.opt.hashKey + '/scalar/dice_{}/'.format(split), dicedict_mean(), epoch)
         return self.bb.avgLoss()['loss']
 
-    def train(self, trainLoader, epoch):
-        return self.processing(trainLoader, epoch, 'train')
+    def train(self, dataLoader, epoch):
+        loss = self.processing(dataLoader, epoch, 'train', False)
+        return loss
 
-    def test(self, trainLoader, epoch):
-        return self.processing(trainLoader, epoch, 'val')
+    def test(self, dataLoader, epoch):
+        loss = self.processing(dataLoader, epoch, 'val', False)
+        return loss
 
     def LRDecay(self, epoch):
         # poly_scheduler.adjust_lr(self.optimizer, epoch)

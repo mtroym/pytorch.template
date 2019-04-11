@@ -4,6 +4,8 @@ import os
 import numpy as np
 
 
+DEBUG = True
+
 class RunningAverage:
     """A simple class that maintains the running average of a quantity
     Example:
@@ -89,17 +91,20 @@ class RunningAverageDict:
                 self.total[keys] = RunningAverageNaN(default=self.default)
         for keys in self.total:
             name = keys.split('#')[0]
-            self.metrics_name[name] = [0.0, 0.0]
+            if name not in self.metrics_name:
+                self.metrics_name[name] = [0.0, 0.0]
             self.total[keys].update(val[keys])
 
     def __call__(self, suffix='', return_mean=True, mean_key='mean'):
         return_dict = dict()
+        # calculate each mean value..
         for keys in self.total:
-            val = '_'.join((keys, suffix)) if suffix != '' else keys
-            return_dict[val] = self.total[keys]()
+            new_key = '_'.join((keys, suffix)) if suffix != '' else keys
+            return_dict[new_key] = self.total[keys]()
             name = keys.split('#')[0]
-            self.metrics_name[name][0] += return_dict[val]
+            self.metrics_name[name][0] += return_dict[new_key]
             self.metrics_name[name][1] += 1
+        # calculate the average of mean value.
         if return_mean:
             for keys in self.metrics_name:
                 return_dict.update({'m' + keys: self.metrics_name[keys][0] / (self.metrics_name[keys][1] + 1e-10)})
@@ -107,7 +112,15 @@ class RunningAverageDict:
 
 
 class StoreArray:
+    """
+    store, save the 2d slices by index. and combine when end of the inters.
+    call self.save(), to save all slices of one instance.
+    """
     def __init__(self, length=1, path='.'):
+        """
+        :param length: maybe length of the StoreArray.(num of instances.)
+        :param path: where to store the numpy value.
+        """
         self.mem = [list() for _ in range(length)]
         self.len = length
         self.size = 0
@@ -115,53 +128,66 @@ class StoreArray:
         self.path = path
 
     def update(self, index, value_idx, value):
+        """
+        Save the slice value to file. save mem.
+        Batch/single format.
+        :param index: `index` of instance.
+        :param value_idx: `index` of slice of (instance index).
+        :param value: `value`(2d numpy array) of `value_idx`th slice of `index`th instance.
+        :return: None.
+        """
+        # if DEBUG: print("===> update single!")
+        if isinstance(index, int):
+            self.save_single(index, value_idx, value)
+            return
         for i in range(len(index)):
-            # self.update_single(index[i], int(value_idx[i]), value[i])
-            self.save_single(index[i], int(value_idx[i]), value[i], self.path)
+            self.save_single(index[i], int(value_idx[i]), value[i])
 
-    def save_single(self, index, value_idx, value, save_path='.'):
+    def save_single(self, index, value_idx, value):
+        """
+        handler of one slice.
+        :param index: `index` of instance.
+        :param value_idx: `index` of slice of (instance index).
+        :param value: `value`(2d numpy array) of `value_idx`th slice of `index`th instance.
+        :return: None.
+        """
         name = '0' * (5 - len(str(value_idx))) + str(value_idx) + '.npy'
-        path = os.path.join(save_path, str(index))
+        path = os.path.join(self.path, str(index))
+        # print(path)
         if not os.path.exists(path):
             os.makedirs(os.path.join(path))
         np.save(os.path.join(path, name), value)
         del value
 
-    def update_single(self, index, value_idx, value):
-        data = (value_idx, value)
-        if index in self.index_dict:
-            self.mem[self.index_dict[index]].append(data)
-        else:
-            self.index_dict[index] = self.size
-            self.size += 1
-            self.mem[self.index_dict[index]].append(data)
-
     def __len__(self):
         return self.len
 
-    def save(self, index=None, split_save=True, save_path='.'):
-        save_all = index is None
-        for index_instance in self.index_dict.keys():
-            if save_all or (index_instance == index and not save_all):
-                if index_instance not in self.index_dict:
-                    continue
-                real_idx = self.index_dict[index_instance]
-                after_sorting = sorted(self.mem[real_idx], key=lambda x: x[0])
-                real_val = np.array(list(map(lambda x: x[1], after_sorting)))
-                path = os.path.join(save_path, str(index_instance))
-                if not os.path.exists(os.path.join(save_path, str(index_instance))):
-                    os.makedirs(os.path.join(save_path, str(index_instance)))
-                if split_save:
-                    for idx in range(len(after_sorting)):
-                        i = after_sorting[idx][0]
-                        name = '0' * (5 - len(str(i))) + str(i) + '.npy'
-                        np.save(os.path.join(path, name), real_val[idx])
-                else:
-                    np.save(os.path.join(path, 'pred.npy'), real_val)
+    def save(self):
+        """
+        combine each slice of one instance into one 3d-numpy array. (H, W, Z)
+        Z: number of slices. TO same level of single paths.
+        :return:None
+        """
+        folder_with_instance = os.listdir(self.path)
+        for ins in folder_with_instance:
+            # validate the `ins` is the dir of one instance.
+            if not os.path.isdir(os.path.join(self.path, ins)):
+                continue
+            # read all slices/sequences of this `dir`.
+            slices = sorted(os.listdir(os.path.join(self.path, ins)))
+            if not DEBUG:
+                assert int(slices[-1].split('.')[0]) == len(slices) - 1, 'the number of slice did not match!'
+            compose = []
+            for slice_ in slices:
+                compose.append(np.load(os.path.join(self.path, ins, slice_))[..., np.newaxis])
+            # combine them all, and save.
+            compose = np.concatenate(compose, 2)
+            np.save(os.path.join(self.path, ins + '.npy'), compose)
+            del compose, slices
 
 
 def test_store_array():
-    sa = StoreArray(10)
+    sa = StoreArray(10, '/Users/tony/PycharmProjects/pytorch.template/output/')
     sa.update(3, 0, 'a')
     sa.update(3, 100, 'f')
     sa.update(3, 2, 'b')
@@ -176,8 +202,7 @@ def test_store_array():
     sa.update(100, 2, '2')
     sa.update(100, 9, '9')
     sa.update(9, 1, 'great')
-    sa.save(None, split_save=False, save_path='/Users/tony/PycharmProjects/Pred')
-
+    sa.save()
 
 def test_running_average():
     loss_avg = RunningAverageDict(0.0)
