@@ -87,71 +87,74 @@ class Trainer:
                 _, preds = torch.max(output, 1)
                 if is_eval:
                     metrics = self.metrics(preds, targetV)
-
-            # save each slice ...
-            store_array_pred.update(pid, sid, preds.detach().cpu().numpy())
-            store_array_gt.update(pid, sid, targetV.detach().cpu().numpy())
+            if epoch % 10 == 0:
+                # save each slice ...
+                store_array_pred.update(pid, sid, preds.detach().cpu().numpy())
+                store_array_gt.update(pid, sid, targetV.detach().cpu().numpy())
 
             runTime = time.time() - start - datatime
             log = self.bb.update(loss_record, {'TD': datatime, 'TR': runTime}, metrics, split, i, epoch)
             del loss, loss_record, output
             self.logger[split].write(log)
-
-        store_array_pred.save()
-        store_array_gt.save()
+        if epoch % 10 == 0:
+            store_array_pred.save()
+            store_array_gt.save()
         del store_array_pred, store_array_gt
         self.logger[split].write(self.bb.finish(epoch, split))
 
-        set_ = sorted(processing_set)
-        output_path = self.www + '/Pred_' + split
-        gt_path = self.www + '/GT_' + split
+        if epoch % 10 == 0:
+            #  ------------ eval for 3d ------------
+            set_ = sorted(processing_set)
+            output_path = self.www + '/Pred_' + split
+            gt_path = self.www + '/GT_' + split
 
-        hdf = sitk.HausdorffDistanceImageFilter()
-        dicef = sitk.LabelOverlapMeasuresImageFilter()
-        #  ------------ eval ------------
-        HDdict_mean = RunningAverageDict()
-        dicedict_mean = RunningAverageDict()
-        for instance in set_:
-            print(instance)
-            pred = np.load(os.path.join(output_path, instance + '.npy'))
-            gt = np.load(os.path.join(gt_path, instance + '.npy'))
-            # Post Processing.
-            # DenseCRF
+            hdf = sitk.HausdorffDistanceImageFilter()
+            dicef = sitk.LabelOverlapMeasuresImageFilter()
+            HDdict_mean = RunningAverageDict()
+            dicedict_mean = RunningAverageDict()
+            for instance in set_:
+                print(instance)
+                pred = np.load(os.path.join(output_path, instance + '.npy'))
+                gt = np.load(os.path.join(gt_path, instance + '.npy'))
+                # Post Processing.
+                # DenseCRF
 
-            # simpleITK HD dice
-            pred = sitk.GetImageFromArray(pred)
-            gt = sitk.GetImageFromArray(gt)
-            HDdict = {}
-            dicedict = {}
-            for i in range(self.opt.numClasses - 1):
-                HD = np.nan
-                dice = np.nan
-                try:
-                    hdf.Execute(pred == i + 1, gt == i + 1)
-                    HD = hdf.GetHausdorffDistance()
-                except:
-                    pass
-                try:
-                    dicef.Execute(pred == i + 1, gt == i + 1)
-                    dice = dicef.GetDiceCoefficient()
-                except:
-                    pass
-                HDdict['HD#' + str(i)] = HD
-                dicedict['Dice#' + str(i)] = dice
-            HDdict_mean.update(HDdict)
-            dicedict_mean.update(dicedict)
-            del pred, gt
-        # calculate mean
-        self.bb.writer.add_scalars(self.opt.hashKey + '/scalar/HD_{}/'.format(split), HDdict_mean(), epoch)
-        self.bb.writer.add_scalars(self.opt.hashKey + '/scalar/dice_{}/'.format(split), dicedict_mean(), epoch)
+                # simpleITK HD dice
+                pred = sitk.GetImageFromArray(pred)
+                gt = sitk.GetImageFromArray(gt)
+                HDdict = {}
+                dicedict = {}
+                for i in range(self.opt.numClasses - 1):
+                    HD = np.nan
+                    dice = np.nan
+                    try:
+                        hdf.Execute(pred == i + 1, gt == i + 1)
+                        HD = hdf.GetHausdorffDistance()
+                    except:
+                        pass
+                    try:
+                        dicef.Execute(pred == i + 1, gt == i + 1)
+                        dice = dicef.GetDiceCoefficient()
+                    except:
+                        pass
+                    HDdict['HD#' + str(i)] = HD
+                    dicedict['Dice#' + str(i)] = dice
+                HDdict_mean.update(HDdict)
+                dicedict_mean.update(dicedict)
+                print("-------------------------")
+                print(instance, HDdict, dicedict)
+                del pred, gt
+            # calculate mean
+            self.bb.writer.add_scalars(self.opt.hashKey + '/scalar/HD3d_{}/'.format(split), HDdict_mean(), epoch)
+            self.bb.writer.add_scalars(self.opt.hashKey + '/scalar/dice3d_{}/'.format(split), dicedict_mean(), epoch)
         return self.bb.avgLoss()['loss']
 
     def train(self, dataLoader, epoch):
-        loss = self.processing(dataLoader, epoch, 'train', False)
+        loss = self.processing(dataLoader, epoch, 'train', True)
         return loss
 
     def test(self, dataLoader, epoch):
-        loss = self.processing(dataLoader, epoch, 'val', False)
+        loss = self.processing(dataLoader, epoch, 'val', True)
         return loss
 
     def LRDecay(self, epoch):
