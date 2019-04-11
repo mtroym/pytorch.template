@@ -60,7 +60,7 @@ class _ASPP(nn.Module):
 
 
 class DeepLab(nn.Module):
-    def __init__(self, input_dim= 3, backbone='Resnet', output_stride=16, num_classes=21,
+    def __init__(self, input_dim=3, backbone='Resnet', output_stride=16, num_classes=21,
                  sync_bn=True, freeze_bn=False):
         super(DeepLab, self).__init__()
         if backbone == 'drn':
@@ -71,7 +71,7 @@ class DeepLab(nn.Module):
         else:
             BatchNorm = nn.BatchNorm2d
 
-        self.backbone = build_backbone(backbone, output_stride, BatchNorm)
+        self.backbone = build_backbone(input_dim, backbone, output_stride, BatchNorm)
         self.aspp = build_aspp(backbone, output_stride, BatchNorm)
         self.decoder = build_decoder(num_classes, backbone, BatchNorm)
 

@@ -11,7 +11,7 @@ class SegTHOR(Dataset):
         self.dir = imageInfo['basedir']
         self.pathData = imageInfo[split]
         self.inputSize = (252, 316)
-        self.input_dim = 3
+        self.input_dim = 1
         self.boundary = [161, 413, 85, 401]  # (252, 316)
         self.mean, self.std = 0.456, 0.224
         opt.DSmode = 'file'
@@ -35,20 +35,18 @@ class SegTHOR(Dataset):
             pass
 
     def __getitem__(self, index):
-        if self.DSmode == 'file':
-            (pid, sid), gtp, p = self.pathData[index]
-            img = nib.load(p).get_fdata()[:, :, sid]
-            gt = nib.load(gtp).get_data()[:, :, sid]
-            # TODO: change to eval code.
-        else:  # mem
-            img = self.img_slice[index]
-            gt = self.GT_slice[index]
+        # load file path, and load file.
+        (pid, sid), gtp, p = self.pathData[index]
+        img = nib.load(p).get_fdata()[:, :, sid]
+        gt = nib.load(gtp).get_data()[:, :, sid]
 
+        # some preprocessing...
         img, gt = self._transform(img, gt)
-        img_ = np.array([img, img, img])
+        img_ = np.array(img)
         image = torch.from_numpy(img_).float()
         target = torch.from_numpy(gt)
-        return (pid, sid), image, target
+        # convert to tensor.
+        return (pid, sid), image[np.newaxis, ...], target
 
     def __len__(self):
         return len(self.pathData)
