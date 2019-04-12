@@ -21,6 +21,7 @@ def best(opt):
 
 
 def load(opt):
+    print(opt.resume, opt.epochNum)
     epoch = opt.epochNum
     if epoch == 0:
         return None
