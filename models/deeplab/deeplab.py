@@ -264,6 +264,16 @@ def createModel(opt):
     # model = Deeplab_v3(class_number=opt.numClasses, fine_tune=False)
     # model = _DeepLab(input_dim=opt.input_dim, inputsize=opt.inputSize, backbone='Xception', outstride=8,
     #                 classes=opt.numClasses)
+    params = list(model.parameters())
+    k = 0
+    for i in params:
+        l = 1
+        print("该层的结构：" + str(list(i.size())))
+        for j in i.size():
+            l *= j
+        print("该层参数和：" + str(l))
+        k = k + l
+    print("总参数数量和：" + str(k))
     if opt.GPU:
         model = model.cuda()
     return model
