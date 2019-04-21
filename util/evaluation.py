@@ -1,6 +1,6 @@
 import numpy as np
 import torch.nn as nn
-
+import torch
 def IoU(Reframe, GTframe):
     """
     Reframe: result (Xmid, Ymid, height, width)
@@ -95,6 +95,8 @@ def ValIoU(Reframe, GTframe):
 
 
 def modelsize(model, input, type_size=4):
+    if torch.cuda.is_available():
+        input = input.cuda()
     para = sum([np.prod(list(p.size())) for p in model.parameters()])
     print('Model {} : params: {:4f}M'.format(model._get_name(), para * type_size / 1000 / 1000))
 
