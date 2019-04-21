@@ -264,16 +264,7 @@ def createModel(opt):
     # model = Deeplab_v3(class_number=opt.numClasses, fine_tune=False)
     # model = _DeepLab(input_dim=opt.input_dim, inputsize=opt.inputSize, backbone='Xception', outstride=8,
     #                 classes=opt.numClasses)
-    params = list(model.parameters())
-    k = 0
-    for i in params:
-        l = 1
-        print("structure:" + str(list(i.size())))
-        for j in i.size():
-            l *= j
-        print("total params in this l.#:" + str(l))
-        k = k + l
-    print("total params:" + str(k))
+
     if opt.GPU:
         model = model.cuda()
     return model
