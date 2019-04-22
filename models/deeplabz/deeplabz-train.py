@@ -59,7 +59,7 @@ class Trainer:
         self.bb.start(len(dataloader))
         processing_set = []
         for i, ((pid, sid), inputs, target, h) in enumerate(dataloader):
-            if i == 0 and epoch == 1:
+            if i == 0 and epoch == 0:
                 print("=> model Size:")
                 modelsize(self.model, inputs)
                 print("=>> END calculation====")
