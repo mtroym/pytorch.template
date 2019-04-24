@@ -65,8 +65,7 @@ class Trainer:
                 break
 
             # store the patients processed in this phase.
-            if pid not in processing_set:
-                processing_set += [*pid]
+            processing_set += [*pid]
             start = time.time()
             # * Data preparation *
             if self.opt.GPU:
@@ -104,7 +103,7 @@ class Trainer:
 
         if epoch % 10 == 0:
             #  ------------ eval for 3d ------------
-            set_ = sorted(processing_set)
+            set_ = sorted(list(set(processing_set)))
             output_path = self.www + '/Pred_' + split
             gt_path = self.www + '/GT_' + split
 
