@@ -35,7 +35,6 @@ class Decoder(nn.Module):
 
     def forward(self, x, low_level_feat, h):
         hs = F.interpolate(h, size=low_level_feat.size()[2:], mode='bilinear', align_corners=True)
-        print(hs.shape)
         low_level_feat = torch.cat((low_level_feat, hs), dim=1)
         low_level_feat = self.conv1(low_level_feat)
         low_level_feat = self.bn1(low_level_feat)

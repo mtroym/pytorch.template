@@ -264,6 +264,7 @@ def createModel(opt):
     # model = Deeplab_v3(class_number=opt.numClasses, fine_tune=False)
     # model = _DeepLab(input_dim=opt.input_dim, inputsize=opt.inputSize, backbone='Xception', outstride=8,
     #                 classes=opt.numClasses)
+
     if opt.GPU:
         model = model.cuda()
     return model

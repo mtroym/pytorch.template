@@ -9,7 +9,7 @@ from util.summaries import BoardX
 from util.utils import StoreArray
 import SimpleITK as sitk
 from util.utils import RunningAverageDict
-
+from util.evaluation import modelsize
 # allAcc = {}
 # for metric in trainAcc:
 #     allAcc[metric + "_train"] = trainAcc[metric]
@@ -59,7 +59,11 @@ class Trainer:
         self.bb.start(len(dataloader))
         processing_set = []
         for i, ((pid, sid), inputs, target) in enumerate(dataloader):
-
+            print(i, epoch)
+            if i == 0 and epoch == 0:
+                print("=> model Size:")
+                modelsize(self.model, inputs)
+                print("=>> END calculation====")
             # check debug.
             if self.opt.debug and i > 2:
                 break
