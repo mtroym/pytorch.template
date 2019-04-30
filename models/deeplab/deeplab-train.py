@@ -106,7 +106,7 @@ class Trainer:
         del store_array_pred, store_array_gt
         self.logger[split].write(self.bb.finish(epoch, split))
 
-        set_ = sorted(processing_set)
+        set_ = sorted(list(set(processing_set)))
         output_path = self.www + '/Pred_' + split
         gt_path = self.www + '/GT_' + split
 
