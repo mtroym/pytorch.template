@@ -181,9 +181,9 @@ class Trainer:
                     metrics = self.metrics(preds, targetV)
             if epoch % 1 == 0:
                 # save each slice ...
-                store_array_pred.update(pid, sid, output.detach().cpu().numpy())
+                store_array_pred.update(pid, sid, output.detach().cpu().numpy(), branch)
                 if branch == 'z':
-                    store_array_gt.update(pid, sid, targetV.detach().cpu().numpy())
+                    store_array_gt.update(pid, sid, targetV.detach().cpu().numpy(), branch)
 
             runTime = time.time() - start - datatime
             log = self.bb.update(loss_record, {'TD': datatime, 'TR': runTime}, metrics, split, i, epoch, branch)
@@ -192,9 +192,9 @@ class Trainer:
 
         self.logger[split].write(self.bb.finish(epoch, split))
         if epoch % 1 == 0:
-            store_array_pred.save()
+            store_array_pred.save(branch)
             if branch == 'z':
-                store_array_gt.save()
+                store_array_gt.save(branch)
         del store_array_pred, store_array_gt
         return self.bb.avgLoss()['loss'], processing_set
 

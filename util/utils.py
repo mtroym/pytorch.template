@@ -151,8 +151,8 @@ class StoreArray:
         :param value: `value`(2d numpy array) of `value_idx`th slice of `index`th instance.
         :return: None.
         """
-        name = '0' * (5 - len(str(value_idx))) + str(value_idx) + axis + '.npy'
-        path = os.path.join(self.path, str(index), axis)
+        name = '0' * (5 - len(str(value_idx))) + str(value_idx) + '.npy'
+        path = os.path.join(self.path, str(index))
         # print(path)
         if not os.path.exists(path):
             os.makedirs(os.path.join(path))
@@ -168,6 +168,7 @@ class StoreArray:
         Z: number of slices. TO same level of single paths.
         :return:None
         """
+        print(self.path)
         folder_with_instance = os.listdir(self.path)
         for ins in folder_with_instance:
             # validate the `ins` is the dir of one instance.
