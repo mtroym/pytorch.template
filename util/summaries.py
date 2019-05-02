@@ -33,7 +33,7 @@ class BoardX:
         self.progbar = progbar(self.lenDS, width=self.opt.barwidth)
         self.log_interval = int(lenDS / self.log_num)
 
-    def update(self, lossRecord, time, metrics, split, i, epoch):
+    def update(self, lossRecord, time, metrics, split, i, epoch, branch='x'):
         # metrics -> {'m1': val, 'm2': np.nan, ... }
         # maybe contain nan values.
         # lossRecord -> {'loss': val, 'combined_1': val, 'combined_2':val}
@@ -47,14 +47,14 @@ class BoardX:
         self.avgAcces.update(metrics)
 
         if flag == 1:
-            self.writer.add_scalars(self.suffix + '/scalar/Loss', self.avgLoss(split, return_mean=False), logger_idx)
+            self.writer.add_scalars(self.suffix + '/scalar' + branch + '/Loss', self.avgLoss(split, return_mean=False), logger_idx)
             Acces = self.avgAcces(split)
             for metric_name in self.opt.metrics:
                 ACC = {}
                 for k in Acces:
                     if metric_name in k:
                         ACC[k] = Acces[k]
-                self.writer.add_scalars(self.suffix + '/scalar/' + metric_name + '_' + split, ACC, logger_idx)
+                self.writer.add_scalars(self.suffix + '/scalar'+ branch + metric_name + '_' + split, ACC, logger_idx)
         log = updateLog(epoch, i, self.lenDS, time, self.avgLoss(split, return_mean=False),
                         self.avgAcces(split, return_mean=True))
         self.progbar.update(i + 1, list(time.items()) + list(self.avgLoss(split, return_mean=False).items()) + list(

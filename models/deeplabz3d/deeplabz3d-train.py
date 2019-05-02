@@ -50,17 +50,17 @@ class Trainer:
         # dataloader must holds 3-axis...
         dataloaderx, dataloadery, dataloaderz = dataloader
         loss_x, set_ = self.processing_one_branch(dataloaderx, epoch, split, eval, 'x')
-        loss_y, set_ = self.processing_one_branch(dataloadery, epoch, split, eval, 'y')
-        loss_z, set_ = self.processing_one_branch(dataloaderz, epoch, split, eval, 'z')
+        loss_y, _ = self.processing_one_branch(dataloadery, epoch, split, eval, 'y')
+        loss_z, _ = self.processing_one_branch(dataloaderz, epoch, split, eval, 'z')
+
+        output_path_x = self.www + '/Pred_x_' + split
+        output_path_y = self.www + '/Pred_y_' + split
+        output_path_z = self.www + '/Pred_z_' + split
+        gt_path = self.www + '/GT_' + split
+        set_ = sorted(list(set(set_)))
 
         if epoch % 10 == 0:
             #  ------------ eval for 3d ------------
-            set_ = sorted(list(set(set_)))
-            output_path_x = self.www + '/Pred_x_' + split
-            output_path_y = self.www + '/Pred_y_' + split
-            output_path_z = self.www + '/Pred_x_' + split
-            gt_path = self.www + '/GT_' + split
-
             hdf = sitk.HausdorffDistanceImageFilter()
             dicef = sitk.LabelOverlapMeasuresImageFilter()
             HDdict_mean = RunningAverageDict()
@@ -108,6 +108,8 @@ class Trainer:
         return (loss_x+loss_y+loss_z) /  3
 
     def make_pred(self, pred_x, pred_y, pred_z):
+        h, w, z = pred_z.shape
+
         print(pred_x.shape, pred_y.shape, pred_z.shape)
         return np.argmax(pred_x, 3)
 
@@ -129,7 +131,11 @@ class Trainer:
             if self.opt.debug and i > 2:
                 break
             # store the patients processed in this phase.
+<<<<<<< HEAD
             print(branch, inputs.shape)
+=======
+            print(inputs.shape)
+>>>>>>> 30aa4a30330d6821d6c37e73840309cb80b85ab8
             processing_set += pid
             start = time.time()
             # * Data preparation *
@@ -158,7 +164,7 @@ class Trainer:
                     store_array_gt.update(pid, sid, targetV.detach().cpu().numpy())
 
             runTime = time.time() - start - datatime
-            log = self.bb.update(loss_record, {'TD': datatime, 'TR': runTime}, metrics, split, i, epoch)
+            log = self.bb.update(loss_record, {'TD': datatime, 'TR': runTime}, metrics, split, i, epoch, branch)
             del loss, loss_record, output
             self.logger[split].write(log)
 
@@ -168,7 +174,7 @@ class Trainer:
             if branch == 'z':
                 store_array_gt.save()
         del store_array_pred, store_array_gt
-        return self.bb.avgLoss()['loss']
+        return self.bb.avgLoss()['loss'], processing_set
 
     def train(self, dataLoader, epoch):
         loss = self.processing(dataLoader, epoch, 'train', True)
