@@ -43,11 +43,11 @@ def load_paths(opt, base, pa, split):
         for i in range(gt.shape[2]):
             Z.append(((patients, i), gt_path, img_path))
         for i in range(gt.shape[0]):
-            if i <  85 or i  > 401:
+            if i < 162 or i > 413:
                 continue
             X.append(((patients, i), gt_path, img_path))
         for i in range(gt.shape[1]):
-            if i < 162 or i > 413:
+            if i <  85 or i  > 401:
                 continue
             Y.append(((patients, i), gt_path, img_path))
         bar.update(idx + 1)
