@@ -51,8 +51,4 @@ def load_paths(opt, base, pa, split):
                 continue
             Y.append(((patients, i), gt_path, img_path))
         bar.update(idx + 1)
-    out = dict()
-    out['X'] = X
-    out['Y'] = Y
-    out['Z'] = Z
     return X, Y, Z
