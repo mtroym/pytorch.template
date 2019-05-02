@@ -145,7 +145,7 @@ class SegTHORx(Dataset):
         gt = gt.resize((512, 180))
 
         img = np.array(img)
-        gt = np.array(gt).dtype(int)
+        gt = np.array(gt).astype(np.uint8)
 
         # some preprocessing...
         img, gt = self._transform(img, gt)

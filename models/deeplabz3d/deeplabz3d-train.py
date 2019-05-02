@@ -129,6 +129,7 @@ class Trainer:
             if self.opt.debug and i > 2:
                 break
             # store the patients processed in this phase.
+            print(branch, inputs.shape)
             processing_set += pid
             start = time.time()
             # * Data preparation *

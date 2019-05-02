@@ -17,11 +17,11 @@ class DeepLabz3d(nn.Module):
 
     def forward(self, input, branch='x'):
         if branch == 'x':
-            return self.model_x(input)
+            return self.model_x(input[0], height=input[1])
         if branch == 'y':
-            return self.model_y(input)
+            return self.model_y(input[0], height=input[1])
         if branch == 'z':
-            return self.model_z(input)
+            return self.model_z(input[0], height=input[1])
 
 def createModel(opt):
     model = DeepLabz3d(input_dim=opt.input_dim, backbone=opt.backbone, output_stride=opt.outStride,
