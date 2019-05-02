@@ -192,7 +192,7 @@ class Trainer:
 
         self.logger[split].write(self.bb.finish(epoch, split))
         if epoch % 1 == 0:
-            store_array_pred.save(branch)
+            store_array_pred.save_zzz(branch)
             if branch == 'z':
                 store_array_gt.save(branch)
         del store_array_pred, store_array_gt
