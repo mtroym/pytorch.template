@@ -127,7 +127,7 @@ class StoreArray:
         self.index_dict = {}
         self.path = path
 
-    def update(self, index, value_idx, value):
+    def update(self, index, value_idx, value, axis='z'):
         """
         Save the slice value to file. save mem.
         Batch/single format.
@@ -138,12 +138,12 @@ class StoreArray:
         """
         # if DEBUG: print("===> update single!")
         if isinstance(index, int):
-            self.save_single(index, value_idx, value)
+            self.save_single(index, value_idx, value, axis=axis)
             return
         for i in range(len(index)):
-            self.save_single(index[i], int(value_idx[i]), value[i])
+            self.save_single(index[i], int(value_idx[i]), value[i],  axis=axis)
 
-    def save_single(self, index, value_idx, value):
+    def save_single(self, index, value_idx, value, axis='z'):
         """
         handler of one slice.
         :param index: `index` of instance.
@@ -151,8 +151,8 @@ class StoreArray:
         :param value: `value`(2d numpy array) of `value_idx`th slice of `index`th instance.
         :return: None.
         """
-        name = '0' * (5 - len(str(value_idx))) + str(value_idx) + '.npy'
-        path = os.path.join(self.path, str(index))
+        name = '0' * (5 - len(str(value_idx))) + str(value_idx) + axis + '.npy'
+        path = os.path.join(self.path, str(index), axis)
         # print(path)
         if not os.path.exists(path):
             os.makedirs(os.path.join(path))

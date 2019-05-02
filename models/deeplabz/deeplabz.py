@@ -59,10 +59,10 @@ class _ASPP(nn.Module):
 
 
 
-class DeepLab(nn.Module):
+class DeepLabz(nn.Module):
     def __init__(self, input_dim=3, backbone='Resnet', output_stride=16, num_classes=21,
                  sync_bn=True, freeze_bn=False):
-        super(DeepLab, self).__init__()
+        super(DeepLabz, self).__init__()
         if backbone == 'drn':
             output_stride = 8
 
@@ -124,7 +124,7 @@ refers_to = "https://github.com/bonlime/keras-deeplab-v3-plus/blob/master/model.
 
 
 def createModel(opt):
-    model = DeepLab(input_dim=opt.input_dim, backbone=opt.backbone, output_stride=opt.outStride, num_classes=opt.numClasses, sync_bn=False,
+    model = DeepLabz(input_dim=opt.input_dim, backbone=opt.backbone, output_stride=opt.outStride, num_classes=opt.numClasses, sync_bn=False,
                     freeze_bn=False)
     if opt.GPU:
         model = model.cuda()
