@@ -9,6 +9,7 @@ from util.summaries import BoardX
 from util.utils import StoreArray
 import SimpleITK as sitk
 from util.utils import RunningAverageDict
+from PIL  import  Image
 from util.evaluation import modelsize
 # allAcc = {}
 # for metric in trainAcc:
@@ -108,10 +109,35 @@ class Trainer:
         return (loss_x+loss_y+loss_z) /  3
 
     def make_pred(self, pred_x, pred_y, pred_z):
-        h, w, z = pred_z.shape
-
         print(pred_x.shape, pred_y.shape, pred_z.shape)
-        return np.argmax(pred_x, 3)
+        c, h, w, z = pred_z.shape
+        pred_x_real = []
+        for i in range(h): #252
+            cc = []
+            for j in range(c):
+                pred_x_slice = Image.fromarray(pred_x[j, :, :, i])
+                pred_x_slice = pred_x_slice.resize((316, z))
+                cc.append(np.array(pred_x_slice))
+            cc = np.stack(cc, 0)
+            pred_x_real.append(cc)
+        pred_x_real = np.stack(pred_x_real, 0)
+        pred_x_real = pred_x_real.transpose([0, 2, 1, 3])
+
+        pred_y_real = []
+        for i in range(w): #252
+            cc = []
+            for j in range(c):
+                pred_y_slice = Image.fromarray(pred_y[j, :, :, i])
+                pred_y_slice = pred_y_slice.resize((316, z))
+                cc.append(np.array(pred_y_slice))
+            cc = np.stack(cc, 0)
+            pred_y_real.append(cc)
+        pred_y_real = np.stack(pred_y_real, 0)
+        pred_x_real = pred_x_real.transpose([2, 0, 3, 1])
+
+        pred = pred_z + pred_x_real+pred_y_real
+        pred = np.argmax(pred, 3)
+        return pred
 
 
     def processing_one_branch(self, dataloader, epoch, split, eval, branch='z'):
@@ -131,7 +157,7 @@ class Trainer:
             if self.opt.debug and i > 2:
                 break
             # store the patients processed in this phase.
-            print(branch, inputs.shape)
+            # print(branch, inputs.shape)
             processing_set += pid
             start = time.time()
             # * Data preparation *

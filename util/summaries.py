@@ -54,7 +54,7 @@ class BoardX:
                 for k in Acces:
                     if metric_name in k:
                         ACC[k] = Acces[k]
-                self.writer.add_scalars(self.suffix + '/scalar'+ branch + metric_name + '_' + split, ACC, logger_idx)
+                self.writer.add_scalars(self.suffix + '/scalar'+ branch + '/' + metric_name + '_' + split, ACC, logger_idx)
         log = updateLog(epoch, i, self.lenDS, time, self.avgLoss(split, return_mean=False),
                         self.avgAcces(split, return_mean=True))
         self.progbar.update(i + 1, list(time.items()) + list(self.avgLoss(split, return_mean=False).items()) + list(
