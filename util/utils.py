@@ -205,7 +205,7 @@ class StoreArray:
                 assert int(slices[-1].split('.')[0]) == len(slices) - 1, 'the number of slice did not match!'
             compose = []
             for slice_ in slices:
-                compose.append(np.load(os.path.join(self.path, ins, slice_))[..., np.newaxis])
+                compose.append(np.load(os.path.join(self.path, ins, slice_)))
             # combine them all, and save.
             compose = np.stack(compose, 3)
             if branch == 'x':
