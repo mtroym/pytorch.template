@@ -246,7 +246,9 @@ def test_running_average():
 
 
 if __name__ == '__main__':
-    test_store_array()
+    sa = StoreArray(10, '../www/segTHOR3D_deeplabz3d_Xception_SGD_LR0.0005/Pred_z_train')
+    sa.save_zzz('z')
+    # test_store_array()
     #
 
     # loss = RunningAverageNaN(0.0)
