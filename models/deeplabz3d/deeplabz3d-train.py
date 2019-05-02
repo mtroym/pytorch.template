@@ -121,7 +121,7 @@ class Trainer:
             cc = np.stack(cc, 0)
             pred_x_real.append(cc)
         pred_x_real = np.stack(pred_x_real, 0)
-        pred_x_real = pred_x_real.transpose([0, 2, 1, 3])
+        pred_x_real = pred_x_real.transpose([1, 0, 2, 3])
 
         pred_y_real = []
         for i in range(w): #252
@@ -133,10 +133,11 @@ class Trainer:
             cc = np.stack(cc, 0)
             pred_y_real.append(cc)
         pred_y_real = np.stack(pred_y_real, 0)
-        pred_x_real = pred_x_real.transpose([2, 0, 3, 1])
-
-        pred = pred_z + pred_x_real+pred_y_real
-        pred = np.argmax(pred, 3)
+        pred_x_real = pred_x_real.transpose([1, 0, 2, 3])
+        print(pred_y_real.shape, pred_x_real.shape, pred_z.shape)
+        pred = pred_z + pred_x_real+ pred_y_real
+        pred = np.argmax(pred, 0)
+        print(pred.shape)
         return pred
 
 
