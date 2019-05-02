@@ -66,6 +66,7 @@ class Trainer:
             dicef = sitk.LabelOverlapMeasuresImageFilter()
             HDdict_mean = RunningAverageDict()
             dicedict_mean = RunningAverageDict()
+            # for instance in set_:
             for instance in set_:
                 print(instance)
                 pred_x = np.load(os.path.join(output_path_x, instance + '.npy'))
@@ -115,7 +116,7 @@ class Trainer:
         for i in range(h): #252
             cc = []
             for j in range(c):
-                pred_x_slice = Image.fromarray(pred_x[j, :, :, i])
+                pred_x_slice = Image.fromarray(pred_x[j, i, :, :])
                 pred_x_slice = pred_x_slice.resize((316, z))
                 cc.append(np.array(pred_x_slice))
             cc = np.stack(cc, 0)
@@ -127,7 +128,7 @@ class Trainer:
         for i in range(w): #252
             cc = []
             for j in range(c):
-                pred_y_slice = Image.fromarray(pred_y[j, :, :, i])
+                pred_y_slice = Image.fromarray(pred_y[j, i, :, :])
                 pred_y_slice = pred_y_slice.resize((316, z))
                 cc.append(np.array(pred_y_slice))
             cc = np.stack(cc, 0)
