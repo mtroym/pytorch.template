@@ -60,7 +60,7 @@ class Trainer:
         gt_path = self.www + '/GT_' + split
         set_ = sorted(list(set(set_)))
 
-        if epoch % 10 == 0:
+        if epoch % 1 == 0:
             #  ------------ eval for 3d ------------
             hdf = sitk.HausdorffDistanceImageFilter()
             dicef = sitk.LabelOverlapMeasuresImageFilter()
