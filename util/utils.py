@@ -162,7 +162,7 @@ class StoreArray:
     def __len__(self):
         return self.len
 
-    def save(self):
+    def save(self, branch='z'):
         """
         combine each slice of one instance into one 3d-numpy array. (H, W, Z)
         Z: number of slices. TO same level of single paths.
