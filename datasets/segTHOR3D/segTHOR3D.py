@@ -14,7 +14,7 @@ class SegTHORz(Dataset):
         self.pathData = imageInfo[split][2]
         self.inputSize = (252, 316)
         self.input_dim = 1
-        self.boundary = [161, 413, 85, 401]  # (252, 316)
+        self.boundary = [161, 414, 85, 402]  # (252, 316)
         self.mean, self.std = 0.456, 0.224
         opt.DSmode = 'file'
         self.DSmode = opt.DSmode
@@ -68,7 +68,7 @@ class SegTHORy(Dataset):
         self.pathData = imageInfo[split][1]
         self.inputSize = (252, 180)
         self.input_dim = 1
-        self.boundary = [161, 413, 85, 401]  # (252, 316)
+        self.boundary = [161, 414, 85, 402]  # (252, 316)
         self.mean, self.std = 0.456, 0.224
         self.img_slice = []
         self.GT_slice = []
