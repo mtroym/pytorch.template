@@ -179,7 +179,7 @@ class Trainer:
                 _, preds = torch.max(output, 1)
                 if is_eval:
                     metrics = self.metrics(preds, targetV)
-            if epoch % 10 == 0:
+            if epoch % 1 == 0:
                 # save each slice ...
                 store_array_pred.update(pid, sid, output.detach().cpu().numpy())
                 if branch == 'z':
