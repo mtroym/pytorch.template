@@ -191,7 +191,7 @@ class Trainer:
             self.logger[split].write(log)
 
         self.logger[split].write(self.bb.finish(epoch, split))
-        if epoch % 10 == 0:
+        if epoch % 1 == 0:
             store_array_pred.save()
             if branch == 'z':
                 store_array_gt.save()
