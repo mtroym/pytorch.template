@@ -16,7 +16,7 @@ def create(opt):
     loaders = []
     for split in ['train', 'val']:
         dataset = datasets.create(opt, split)
-        if split == 'train':
+        if split == 'train' and opt.dataset != 'segTHOR3D':
             loaders.append(myDataLoader(dataset=dataset, batch_size=opt.batchSize, shuffle=True,
                                         num_workers=opt.nThreads, pin_memory=opt.GPU))
         elif split == 'val':
