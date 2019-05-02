@@ -81,8 +81,8 @@ class SegTHORy(Dataset):
         img = Image.fromarray(img[:, sid, :])
         gt = Image.fromarray(nib.load(gtp).get_data()[:, sid, :])
 
-        img.resize((512, 180))
-        gt.resize((512, 180))
+        img = img.resize((512, 180))
+        gt = gt.resize((512, 180))
 
         img = np.array(img).transpose()
         gt = np.array(gt).astype(np.uint8).transpose()
