@@ -73,7 +73,7 @@ class DeepLab(nn.Module):
 
         self.backbone = build_backbone(input_dim, backbone, output_stride, BatchNorm)
         self.aspp = build_aspp(backbone, output_stride, BatchNorm)
-        self.decoder = build_decoder(num_classes, backbone, BatchNorm)
+        self.decoder = build_decoder(num_classes, backbone, BatchNorm, with_height=False)
 
         if freeze_bn:
             self.freeze_bn()
@@ -248,8 +248,8 @@ if __name__ == "__main__":
     opt = opts.parse()
     opt.input_dim = 3
     opt.inputSize = (513, 513)
-    model = _DeepLab(input_dim=opt.input_dim, inputsize=opt.inputSize, backbone='Xception', outstride=8,
-                    classes=opt.numClasses)
+    model = DeepLab(input_dim=opt.input_dim, backbone=opt.backbone, output_stride=opt.outStride, num_classes=opt.numClasses, sync_bn=False,
+                    freeze_bn=False)
     # model.load_state_dict(torch.load('/Users/seolen/Seolen-Code/Ipy/Pascal-Unet/results/pretrain/deeplab-resnet.pth.tar')['state_dict'])
 
     model.eval()
