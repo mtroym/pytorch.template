@@ -8,6 +8,8 @@ class SegTHOR(Dataset):
     def __init__(self, imageInfo, opt, split, return_h):
         self.return_h = return_h
         self.opt = opt
+        if self.opt.model == 'deeplabz':
+            return_h = True
         self.split = split
         self.dir = imageInfo['basedir']
         self.pathData = imageInfo[split]
@@ -19,21 +21,6 @@ class SegTHOR(Dataset):
         self.DSmode = opt.DSmode
         self.img_slice = []
         self.GT_slice = []
-        if self.DSmode == 'mem':
-            last_patient_id = -1
-            last_patient = None
-            for (patient_id, sid), gtp, p in self.pathData:
-                if patient_id != last_patient_id:
-                    last_patient = nib.load(p).get_fdata(), nib.load(gtp).get_data()
-                else:
-                    pass
-                img = last_patient[0][:, :, sid]  # image
-                gt = last_patient[1][:, :, sid]  # ground truth
-                self.img_slice.append(img)
-                self.GT_slice.append(gt)
-                last_patient_id = patient_id
-        else:  # 'file'
-            pass
 
     def __getitem__(self, index):
         # load file path, and load file.
