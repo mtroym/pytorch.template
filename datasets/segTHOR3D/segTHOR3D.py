@@ -84,8 +84,8 @@ class SegTHORy(Dataset):
         img.resize((512, 180))
         gt.resize((512, 180))
 
-        img = np.array(img)
-        gt = np.array(gt)
+        img = np.array(img).transpose()
+        gt = np.array(gt).transpose()
 
         # some preprocessing...
         img, gt = self._transform(img, gt)
@@ -144,8 +144,8 @@ class SegTHORx(Dataset):
         img = img.resize((512, 180))
         gt = gt.resize((512, 180))
 
-        img = np.array(img)
-        gt = np.array(gt).dtype(int)
+        img = np.array(img).transpose()
+        gt = np.array(gt).dtype(int).transpose()
 
         # some preprocessing...
         img, gt = self._transform(img, gt)
