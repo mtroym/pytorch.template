@@ -45,72 +45,20 @@ class Trainer:
         self.log_num = opt.logNum
         self.www = opt.www
 
+
     def processing(self, dataloader, epoch, split, eval):
         # dataloader must holds 3-axis...
-
-
-
-        store_array_pred = StoreArray(len(dataloader), self.www + '/Pred_' + split)
-        store_array_gt = StoreArray(len(dataloader), self.www + '/GT_' + split)
-        # use store utils to update output.
-        print('=> {}ing epoch # {}'.format(split, epoch))
-        is_train = split == 'train'
-        is_eval = eval
-        if is_train:
-            self.model.train()
-        else:  # VAL
-            self.model.eval()
-        self.bb.start(len(dataloader))
-        processing_set = []
-
-        print('Training X branch ...')
-        for i, ((pid, sid), inputs, target, h) in enumerate(dataloader):
-            if self.opt.debug and i > 2:
-                break
-            # store the patients processed in this phase.
-            processing_set += pid
-            start = time.time()
-            # * Data preparation *
-            if self.opt.GPU:
-                inputs, target, h = inputs.cuda(), target.cuda(), h.cuda()
-            inputV, targetV, hV = Variable(inputs).float(), Variable(target), Variable(h).float()
-            datatime = time.time() - start
-            # * Feed in nets*
-            if is_train:
-                self.optimizer.zero_grad()
-            output = self.model(inputV, hV)
-            loss, loss_record = self.criterion(output, targetV.long())
-            if is_train:
-                loss.mean().backward()
-                self.optimizer.step()
-            # * Eval *
-            metrics = {}
-            with torch.no_grad():
-                _, preds = torch.max(output, 1)
-                if is_eval:
-                    metrics = self.metrics(preds, targetV)
-            if epoch % 10 == 0:
-                # save each slice ...
-                store_array_pred.update(pid, sid, preds.detach().cpu().numpy())
-                store_array_gt.update(pid, sid, targetV.detach().cpu().numpy())
-
-            runTime = time.time() - start - datatime
-            log = self.bb.update(loss_record, {'TD': datatime, 'TR': runTime}, metrics, split, i, epoch)
-            del loss, loss_record, output
-            self.logger[split].write(log)
-
-
-
-        if epoch % 10 == 0:
-            store_array_pred.save()
-            store_array_gt.save()
-        del store_array_pred, store_array_gt
-        self.logger[split].write(self.bb.finish(epoch, split))
+        dataloaderx, dataloadery, dataloaderz = dataloader
+        loss_x, set_ = self.processing_one_branch(dataloaderx, epoch, split, eval, 'x')
+        loss_y, set_ = self.processing_one_branch(dataloadery, epoch, split, eval, 'y')
+        loss_z, set_ = self.processing_one_branch(dataloaderz, epoch, split, eval, 'z')
 
         if epoch % 10 == 0:
             #  ------------ eval for 3d ------------
-            set_ = sorted(list(set(processing_set)))
-            output_path = self.www + '/Pred_' + split
+            set_ = sorted(list(set(set_)))
+            output_path_x = self.www + '/Pred_x_' + split
+            output_path_y = self.www + '/Pred_y_' + split
+            output_path_z = self.www + '/Pred_x_' + split
             gt_path = self.www + '/GT_' + split
 
             hdf = sitk.HausdorffDistanceImageFilter()
@@ -119,7 +67,11 @@ class Trainer:
             dicedict_mean = RunningAverageDict()
             for instance in set_:
                 print(instance)
-                pred = np.load(os.path.join(output_path, instance + '.npy'))
+                pred_x = np.load(os.path.join(output_path_x, instance + '.npy'))
+                pred_y = np.load(os.path.join(output_path_y, instance + '.npy'))
+                pred_z = np.load(os.path.join(output_path_z, instance + '.npy'))
+                pred = self.make_pred(pred_x, pred_y, pred_z)
+
                 gt = np.load(os.path.join(gt_path, instance + '.npy'))
                 # Post Processing.
                 # DenseCRF
@@ -152,6 +104,69 @@ class Trainer:
             # calculate mean
             self.bb.writer.add_scalars(self.opt.hashKey + '/scalar/HD3d_{}/'.format(split), HDdict_mean(), epoch)
             self.bb.writer.add_scalars(self.opt.hashKey + '/scalar/dice3d_{}/'.format(split), dicedict_mean(), epoch)
+
+        return (loss_x+loss_y+loss_z) /  3
+
+    def make_pred(self, pred_x, pred_y, pred_z):
+        print(pred_x.shape, pred_y.shape, pred_z.shape)
+        return np.argmax(pred_x, 3)
+
+
+    def processing_one_branch(self, dataloader, epoch, split, eval, branch='z'):
+        store_array_pred = StoreArray(len(dataloader), self.www + '/Pred_' + branch + '_' + split)
+        store_array_gt = StoreArray(len(dataloader), self.www + '/GT_' +split)
+        # use store utils to update output.
+        print('=> {}ing epoch # {} in branch {}'.format(split, epoch, branch))
+        is_train = split == 'train'
+        is_eval = eval
+        if is_train:
+            self.model.train()
+        else:  # VAL
+            self.model.eval()
+        self.bb.start(len(dataloader))
+        processing_set = []
+        for i, ((pid, sid), inputs, target, h) in enumerate(dataloader):
+            if self.opt.debug and i > 2:
+                break
+            # store the patients processed in this phase.
+            processing_set += pid
+            start = time.time()
+            # * Data preparation *
+            if self.opt.GPU:
+                inputs, target, h = inputs.cuda(), target.cuda(), h.cuda()
+            inputV, targetV, hV = Variable(inputs).float(), Variable(target), Variable(h).float()
+            datatime = time.time() - start
+            # * Feed in nets*
+            if is_train:
+                self.optimizer.zero_grad()
+            output = self.model((inputV, hV), branch)
+            loss, loss_record = self.criterion(output, targetV.long())
+            if is_train:
+                loss.mean().backward()
+                self.optimizer.step()
+            # * Eval *
+            metrics = {}
+            with torch.no_grad():
+                _, preds = torch.max(output, 1)
+                if is_eval:
+                    metrics = self.metrics(preds, targetV)
+            if epoch % 10 == 0:
+                # save each slice ...
+                store_array_pred.update(pid, sid, output.detach().cpu().numpy())
+                if branch == 'z':
+                    store_array_gt.update(pid, sid, targetV.detach().cpu().numpy())
+
+            runTime = time.time() - start - datatime
+            log = self.bb.update(loss_record, {'TD': datatime, 'TR': runTime}, metrics, split, i, epoch)
+            del loss, loss_record, output
+            self.logger[split].write(log)
+
+        self.logger[split].write(self.bb.finish(epoch, split))
+        if epoch % 10 == 0:
+            store_array_pred.save()
+            if branch == 'z':
+                store_array_gt.save()
+        del store_array_pred, store_array_gt
         return self.bb.avgLoss()['loss']
 
     def train(self, dataLoader, epoch):
