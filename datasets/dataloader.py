@@ -16,10 +16,26 @@ def create(opt):
     loaders = []
     for split in ['train', 'val']:
         dataset = datasets.create(opt, split)
-        if split == 'train' and opt.dataset != 'segTHOR3D':
-            loaders.append(myDataLoader(dataset=dataset, batch_size=opt.batchSize, shuffle=True,
+        if split == 'train':
+            if opt.dataset == 'segTHOR3D':
+                loaders.append(myDataLoader(dataset=dataset[0], batch_size=opt.batchSize, shuffle=True,
+                                            num_workers=opt.nThreads, pin_memory=opt.GPU))
+                loaders.append(myDataLoader(dataset=dataset[1], batch_size=opt.batchSize, shuffle=True,
                                         num_workers=opt.nThreads, pin_memory=opt.GPU))
+                loaders.append(myDataLoader(dataset=dataset[2], batch_size=opt.batchSize, shuffle=True,
+                                            num_workers=opt.nThreads, pin_memory=opt.GPU))
+            else:
+                loaders.append(myDataLoader(dataset=dataset, batch_size=opt.batchSize, shuffle=True,
+                                            num_workers=opt.nThreads, pin_memory=opt.GPU))
         elif split == 'val':
-            loaders.append(myDataLoader(dataset=dataset, batch_size=opt.batchSize, shuffle=False,
+            if opt.dataset == 'segTHOR3D':
+                loaders.append(myDataLoader(dataset=dataset[0], batch_size=opt.batchSize, shuffle=False,
+                                            num_workers=opt.nThreads, pin_memory=opt.GPU))
+                loaders.append(myDataLoader(dataset=dataset[1], batch_size=opt.batchSize, shuffle=False,
                                         num_workers=opt.nThreads, pin_memory=opt.GPU))
-    return loaders[0], loaders[1]
+                loaders.append(myDataLoader(dataset=dataset[2], batch_size=opt.batchSize, shuffle=False,
+                                            num_workers=opt.nThreads, pin_memory=opt.GPU))
+            else:
+                loaders.append(myDataLoader(dataset=dataset, batch_size=opt.batchSize, shuffle=False,
+                                        num_workers=opt.nThreads, pin_memory=opt.GPU))
+    return loaders[0:3], loaders[3:]

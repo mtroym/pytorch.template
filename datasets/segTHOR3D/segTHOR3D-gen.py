@@ -39,19 +39,20 @@ def load_paths(opt, base, pa, split):
         gt_path = os.path.join(base, patients, 'GT.nii.gz')
         img_path = os.path.join(base, patients, patients + '.nii.gz')
         gt = nib.load(gt_path).get_data()
-        import pdb
-        pdb.set_trace()
-
-
+        # size_bound =  [161, 413, 85, 401]
         for i in range(gt.shape[2]):
             if np.sum(gt[:, :, i]) == 0 and split == 'train':
                 continue
-            X.append(((patients, i), gt_path, img_path))
+            Z.append(((patients, i), gt_path, img_path))
         for i in range(gt.shape[0]):
+            if i <  85 or i  > 401:
+                continue
             if np.sum(gt[i, :, :]) == 0 and split == 'train':
                 continue
-            Y.append(((patients, i), gt_path, img_path))
+            X.append(((patients, i), gt_path, img_path))
         for i in range(gt.shape[1]):
+            if i < 162 or i > 413:
+                continue
             if np.sum(gt[:, i, :]) == 0 and split == 'train':
                 continue
             Y.append(((patients, i), gt_path, img_path))

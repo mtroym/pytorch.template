@@ -1,16 +1,17 @@
 import nibabel as nib
 import numpy as np
+from PIL import Image
 import torch
 from torch.utils.data import Dataset
+import cv2
 
-
-class SegTHORx(Dataset):
+class SegTHORz(Dataset):
     def __init__(self, imageInfo, opt, split, return_h):
         self.return_h = return_h
         self.opt = opt
         self.split = split
         self.dir = imageInfo['basedir']
-        self.pathData = imageInfo[split]['X']
+        self.pathData = imageInfo[split][2]
         self.inputSize = (252, 316)
         self.input_dim = 1
         self.boundary = [161, 413, 85, 401]  # (252, 316)
@@ -24,7 +25,7 @@ class SegTHORx(Dataset):
         # load file path, and load file.
         (pid, sid), gtp, p = self.pathData[index]
         img = nib.load(p).get_fdata()
-        all_num = img.shape[-1]
+        all_num = img.shape[2]
         img = img[:, :, sid]
         gt = nib.load(gtp).get_data()[:, :, sid]
 
@@ -64,13 +65,11 @@ class SegTHORy(Dataset):
         self.opt = opt
         self.split = split
         self.dir = imageInfo['basedir']
-        self.pathData = imageInfo[split]
-        self.inputSize = (252, 316)
+        self.pathData = imageInfo[split][1]
+        self.inputSize = (252, 180)
         self.input_dim = 1
         self.boundary = [161, 413, 85, 401]  # (252, 316)
         self.mean, self.std = 0.456, 0.224
-        opt.DSmode = 'file'
-        self.DSmode = opt.DSmode
         self.img_slice = []
         self.GT_slice = []
 
@@ -78,9 +77,15 @@ class SegTHORy(Dataset):
         # load file path, and load file.
         (pid, sid), gtp, p = self.pathData[index]
         img = nib.load(p).get_fdata()
-        all_num = img.shape[-1]
-        img = img[:, :, sid]
-        gt = nib.load(gtp).get_data()[:, :, sid]
+        all_num = img.shape[1]
+        img = Image.fromarray(img[:, sid, :])
+        gt = Image.fromarray(nib.load(gtp).get_data()[:, sid, :])
+
+        img.resize((512, 180))
+        gt.resize((512, 180))
+
+        img = np.array(img)
+        gt = np.array(gt)
 
         # some preprocessing...
         img, gt = self._transform(img, gt)
@@ -110,16 +115,16 @@ class SegTHORy(Dataset):
         _img /= self.std
 
         top, bottom, left, right = self.boundary
-        return _img[top:bottom, left:right], mask[top:bottom, left:right]
+        return _img[top:bottom, :], mask[top:bottom, :]
 
-class SegTHORz(Dataset):
+class SegTHORx(Dataset):
     def __init__(self, imageInfo, opt, split, return_h):
         self.return_h = return_h
         self.opt = opt
         self.split = split
         self.dir = imageInfo['basedir']
-        self.pathData = imageInfo[split]
-        self.inputSize = (252, 316)
+        self.pathData = imageInfo[split][0]
+        self.inputSize = (316, 180)
         self.input_dim = 1
         self.boundary = [161, 413, 85, 401]  # (252, 316)
         self.mean, self.std = 0.456, 0.224
@@ -132,9 +137,15 @@ class SegTHORz(Dataset):
         # load file path, and load file.
         (pid, sid), gtp, p = self.pathData[index]
         img = nib.load(p).get_fdata()
-        all_num = img.shape[-1]
-        img = img[:, :, sid]
-        gt = nib.load(gtp).get_data()[:, :, sid]
+        all_num = img.shape[0]
+        img = Image.fromarray(img[sid, :, :])
+        gt = Image.fromarray(nib.load(gtp).get_data()[sid, :, :])
+
+        img = img.resize((512, 180))
+        gt = gt.resize((512, 180))
+
+        img = np.array(img)
+        gt = np.array(gt).dtype(int)
 
         # some preprocessing...
         img, gt = self._transform(img, gt)
@@ -164,7 +175,7 @@ class SegTHORz(Dataset):
         _img /= self.std
 
         top, bottom, left, right = self.boundary
-        return _img[top:bottom, left:right], mask[top:bottom, left:right]
+        return _img[left:right,  :], mask[left:right, :]
 
 
 
@@ -176,6 +187,6 @@ def getInstance(info, opt, split):
     myInstancey = SegTHORy(info, opt, split, get_h)
     myInstancez = SegTHORz(info, opt, split, get_h)
     # print(myInstance.inputSize)
-    opt.inputSize = myInstance.inputSize
-    opt.input_dim = myInstance.input_dim
-    return myInstance
+    opt.inputSize = [myInstancex.inputSize, myInstancey.inputSize, myInstancez.inputSize]
+    opt.input_dim = 1
+    return myInstancex, myInstancey, myInstancez

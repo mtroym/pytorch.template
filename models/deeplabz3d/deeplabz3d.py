@@ -4,22 +4,24 @@ from models.deeplabz.deeplabz import DeepLabz
 
 
 class DeepLabz3d(nn.Module):
-    def __init__(self, input_dim=3, backbone='Resnet', output_stride=16, num_classes=21,
+    def __init__(self, input_dim=1, backbone='Resnet', output_stride=16, num_classes=21,
                  sync_bn=True, freeze_bn=False):
         super(DeepLabz3d, self).__init__()
-
-        self.model_xy = DeepLabz(input_dim=input_dim, backbone=backbone, output_stride=output_stride,
+        self.model_x = DeepLabz(input_dim=input_dim, backbone=backbone, output_stride=output_stride,
                                  num_classes=num_classes, sync_bn=sync_bn, freeze_bn=freeze_bn)
-        self.model_xz = DeepLabz(input_dim=input_dim, backbone=backbone, output_stride=output_stride,
+        self.model_y = DeepLabz(input_dim=input_dim, backbone=backbone, output_stride=output_stride,
                                  num_classes=num_classes, sync_bn=sync_bn, freeze_bn=freeze_bn)
-        self.model_yz = DeepLabz(input_dim=input_dim, backbone=backbone, output_stride=output_stride,
+        self.model_z = DeepLabz(input_dim=input_dim, backbone=backbone, output_stride=output_stride,
                                  num_classes=num_classes, sync_bn=sync_bn, freeze_bn=freeze_bn)
 
 
-
-    def forward(self, *input):
-        pass
-
+    def forward(self, input, branch='x'):
+        if branch == 'x':
+            return self.model_x(input)
+        if branch == 'y':
+            return self.model_y(input)
+        if branch == 'z':
+            return self.model_z(input)
 
 def createModel(opt):
     model = DeepLabz3d(input_dim=opt.input_dim, backbone=opt.backbone, output_stride=opt.outStride,
