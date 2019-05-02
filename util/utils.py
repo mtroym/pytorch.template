@@ -187,6 +187,34 @@ class StoreArray:
             del compose, slices
 
 
+    def save_zzz(self, branch='z'):
+        """
+        combine each slice of one instance into one 3d-numpy array. (H, W, Z)
+        Z: number of slices. TO same level of single paths.
+        :return:None
+        """
+        print(self.path)
+        folder_with_instance = os.listdir(self.path)
+        for ins in folder_with_instance:
+            # validate the `ins` is the dir of one instance.
+            if not os.path.isdir(os.path.join(self.path, ins)):
+                continue
+            # read all slices/sequences of this `dir`.
+            slices = sorted(os.listdir(os.path.join(self.path, ins)))
+            if not DEBUG:
+                assert int(slices[-1].split('.')[0]) == len(slices) - 1, 'the number of slice did not match!'
+            compose = []
+            for slice_ in slices:
+                compose.append(np.load(os.path.join(self.path, ins, slice_))[..., np.newaxis])
+            # combine them all, and save.
+            compose = np.stack(compose, 3)
+            if branch == 'x':
+                compose = compose.transpose([0, 3, 1, 2])
+            elif branch == 'y':
+                compose = compose.transpose([0, 1, 3, 2])
+            np.save(os.path.join(self.path, ins + '.npy'), compose)
+            del compose, slices
+
 def test_store_array():
     sa = StoreArray(10, '/Users/tony/PycharmProjects/pytorch.template/output/')
     sa.update(3, 0, 'a')
