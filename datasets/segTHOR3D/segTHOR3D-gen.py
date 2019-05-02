@@ -8,9 +8,10 @@ from util.progbar import progbar
 
 
 def exec(opt, cache_file_path):
-    assert os.path.exists(opt.data), 'Data directory not found: ' + opt.data
+    data_p = opt.data.replace('3D', '')
+    assert os.path.exists(data_p), 'Data directory not found: ' + data_p
     nib.Nifti1Header.quaternion_threshold = - np.finfo(np.float32).eps * 10  # 松弛一下限
-    training_data_path = os.path.join(opt.data, 'train')
+    training_data_path = os.path.join(data_p, 'train')
     split_ratio = 0.8
     patients = [path for path in os.listdir(training_data_path) if path.startswith('Patient')]
     print('!> basedir = %s' % training_data_path)
@@ -41,8 +42,6 @@ def load_paths(opt, base, pa, split):
         gt = nib.load(gt_path).get_data()
         import pdb
         pdb.set_trace()
-
-
         for i in range(gt.shape[2]):
             if np.sum(gt[:, :, i]) == 0 and split == 'train':
                 continue

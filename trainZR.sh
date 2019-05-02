@@ -5,7 +5,7 @@ python3 main.py --data /root/data \
 --nThreads 10 --nEpochs 200 \
 --logDir ../log/ --debug F \
 --logNum 1 --optimizer SGD \
---suffix BS20 \
+--suffix BS24 \
 --backbone Resnet \
 --DSmode file --epochNum -1
 
