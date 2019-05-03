@@ -125,7 +125,7 @@ class Trainer:
         pred_x_real = pred_x_real.transpose([1, 0, 2, 3])
 
         pred_y_real = []
-        for i in range(w): #252
+        for i in range(h): #252
             cc = []
             for j in range(c):
                 pred_y_slice = Image.fromarray(pred_y[j, i, :, :])
