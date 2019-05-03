@@ -60,7 +60,7 @@ class Trainer:
         gt_path = self.www + '/GT_' + split
         set_ = sorted(list(set(set_)))
 
-        if epoch % 1 == 0:
+        if epoch % 5 == 0:
             #  ------------ eval for 3d ------------
             hdf = sitk.HausdorffDistanceImageFilter()
             dicef = sitk.LabelOverlapMeasuresImageFilter()
@@ -122,7 +122,7 @@ class Trainer:
             cc = np.stack(cc, 0)
             pred_x_real.append(cc)
         pred_x_real = np.stack(pred_x_real, 0)
-        pred_x_real = pred_x_real.transpose([1, 0, 2, 3])
+        pred_x_real = pred_x_real.transpose([0, 1, 3, 2])
 
         pred_y_real = []
         for i in range(h): #252
@@ -134,7 +134,7 @@ class Trainer:
             cc = np.stack(cc, 0)
             pred_y_real.append(cc)
         pred_y_real = np.stack(pred_y_real, 0)
-        pred_x_real = pred_x_real.transpose([1, 0, 2, 3])
+        pred_x_real = pred_x_real.transpose([0, 1, 3, 2])
         print(pred_y_real.shape, pred_x_real.shape, pred_z.shape)
         pred = pred_z + pred_x_real+ pred_y_real
         pred = np.argmax(pred, 0)
@@ -181,7 +181,7 @@ class Trainer:
                 _, preds = torch.max(output, 1)
                 if is_eval:
                     metrics = self.metrics(preds, targetV)
-            if epoch % 1 == 0:
+            if epoch % 5 == 0:
                 # save each slice ...
                 store_array_pred.update(pid, sid, output.detach().cpu().numpy(), branch)
                 if branch == 'z':
@@ -193,7 +193,7 @@ class Trainer:
             self.logger[split].write(log)
 
         self.logger[split].write(self.bb.finish(epoch, split))
-        if epoch % 1 == 0:
+        if epoch % 5 == 0:
             store_array_pred.save_zzz(branch)
             if branch == 'z':
                 store_array_gt.save(branch)
