@@ -1,5 +1,5 @@
 python3 main.py --data /root/data \
---batchSize 6 --epochNum 0 \
+--batchSize 4 --epochNum 0 \
 --netType deeplab --dataset segTHOR \
 --metrics '[Dice]' --LR 0.0005 \
 --nThreads 30 --nEpochs 100 \

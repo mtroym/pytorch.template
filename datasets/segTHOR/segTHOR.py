@@ -8,8 +8,6 @@ class SegTHOR(Dataset):
     def __init__(self, imageInfo, opt, split, return_h):
         self.return_h = return_h
         self.opt = opt
-        if self.opt.model == 'deeplabz':
-            return_h = True
         self.split = split
         self.dir = imageInfo['basedir']
         self.pathData = imageInfo[split]
