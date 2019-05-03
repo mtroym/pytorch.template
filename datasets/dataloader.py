@@ -38,4 +38,7 @@ def create(opt):
             else:
                 loaders.append(myDataLoader(dataset=dataset, batch_size=opt.batchSize, shuffle=False,
                                         num_workers=opt.nThreads, pin_memory=opt.GPU))
-    return loaders[0:3], loaders[3:]
+    if opt.dataset== 'segTHOR3D':
+        return loaders[0:3], loaders[3:]
+    else:
+        return loaders[0], loaders[1]
