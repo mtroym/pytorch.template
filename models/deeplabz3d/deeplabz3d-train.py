@@ -156,6 +156,8 @@ class Trainer:
         self.bb.start(len(dataloader))
         processing_set = []
         for i, ((pid, sid), inputs, target, h) in enumerate(dataloader):
+            if inputs.shape[0] == 1:
+                continue
             if self.opt.debug and i > 2:
                 break
             # store the patients processed in this phase.
