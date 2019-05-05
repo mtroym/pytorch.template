@@ -60,7 +60,7 @@ class Trainer:
         gt_path = self.www + '/GT_' + split
         set_ = sorted(list(set(set_)))
 
-        if epoch % 5 == 0:
+        if epoch % 5 == 0 and split == 'val':
             #  ------------ eval for 3d ------------
             hdf = sitk.HausdorffDistanceImageFilter()
             dicef = sitk.LabelOverlapMeasuresImageFilter()
@@ -183,7 +183,7 @@ class Trainer:
                 _, preds = torch.max(output, 1)
                 if is_eval:
                     metrics = self.metrics(preds, targetV)
-            if epoch % 5 == 0:
+            if epoch % 5 == 0 and split == 'val':
                 # save each slice ...
                 store_array_pred.update(pid, sid, output.detach().cpu().numpy(), branch)
                 if branch == 'z':
@@ -195,7 +195,7 @@ class Trainer:
             self.logger[split].write(log)
 
         self.logger[split].write(self.bb.finish(epoch, split))
-        if epoch % 5 == 0:
+        if epoch % 5 == 0 and split == 'val':
             store_array_pred.save_zzz(branch)
             if branch == 'z':
                 store_array_gt.save(branch)
