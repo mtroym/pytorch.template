@@ -117,24 +117,24 @@ class Trainer:
             cc = []
             for j in range(c):
                 pred_x_slice = Image.fromarray(pred_x[j, i, :, :])
-                pred_x_slice = pred_x_slice.resize((316, z))
+                pred_x_slice = pred_x_slice.resize((z, 316))
                 cc.append(np.array(pred_x_slice))
             cc = np.stack(cc, 0)
             pred_x_real.append(cc)
         pred_x_real = np.stack(pred_x_real, 0)
-        pred_x_real = pred_x_real.transpose([1, 0, 3, 2])
+        pred_x_real = pred_x_real.transpose([1, 0, 2, 3])
 
         pred_y_real = []
         for i in range(h): #252
             cc = []
             for j in range(c):
                 pred_y_slice = Image.fromarray(pred_y[j, i, :, :])
-                pred_y_slice = pred_y_slice.resize((316, z))
+                pred_y_slice = pred_y_slice.resize((z, 316))
                 cc.append(np.array(pred_y_slice))
             cc = np.stack(cc, 0)
             pred_y_real.append(cc)
         pred_y_real = np.stack(pred_y_real, 0)
-        pred_y_real = pred_y_real.transpose([1, 0, 3, 2])
+        pred_y_real = pred_y_real.transpose([1, 0, 2, 3])
         print(pred_y_real.shape, pred_x_real.shape, pred_z.shape)
         pred = pred_z + (pred_x_real+ pred_y_real) * 0
         pred = np.argmax(pred, 0)
@@ -156,8 +156,8 @@ class Trainer:
         self.bb.start(len(dataloader))
         processing_set = []
         for i, ((pid, sid), inputs, target, h) in enumerate(dataloader):
-            self.bb.writer.add_image('{},#{}gt'.format(pid[0],sid[0]), target[0] * 63)
-            self.bb.writer.add_image('{},#{}img'.format(pid[1],sid[1]), inputs[1] * 63)
+            # self.bb.writer.add_image('{},#{}gt'.format(pid[0],sid[0]), target[0] * 63)
+            # self.bb.writer.add_image('{},#{}img'.format(pid[1],sid[1]), inputs[1] * 63)
             if inputs.shape[0] == 1:
                 continue
             if self.opt.debug and i > 2:
