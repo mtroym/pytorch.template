@@ -50,9 +50,9 @@ class Trainer:
     def processing(self, dataloader, epoch, split, eval):
         # dataloader must holds 3-axis...
         dataloaderx, dataloadery, dataloaderz = dataloader
-        loss_x, set_ = self.processing_one_branch(dataloaderx, epoch, split, eval, 'x')
         loss_y, _ = self.processing_one_branch(dataloadery, epoch, split, eval, 'y')
         loss_z, _ = self.processing_one_branch(dataloaderz, epoch, split, eval, 'z')
+        loss_x, set_ = self.processing_one_branch(dataloaderx, epoch, split, eval, 'x')
 
         output_path_x = self.www + '/Pred_x_' + split
         output_path_y = self.www + '/Pred_y_' + split
@@ -156,6 +156,8 @@ class Trainer:
         self.bb.start(len(dataloader))
         processing_set = []
         for i, ((pid, sid), inputs, target, h) in enumerate(dataloader):
+            self.bb.writer.add_image('{},#{}gt'.format(pid[0],sid[0]), target[0] * 63)
+            self.bb.writer.add_image('{},#{}img'.format(pid[1],sid[1]), inputs[1] * 63)
             if inputs.shape[0] == 1:
                 continue
             if self.opt.debug and i > 2:
