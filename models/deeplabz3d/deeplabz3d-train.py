@@ -136,7 +136,7 @@ class Trainer:
         pred_y_real = np.stack(pred_y_real, 0)
         pred_y_real = pred_y_real.transpose([1, 0, 2, 3])
         print(pred_y_real.shape, pred_x_real.shape, pred_z.shape)
-        pred = pred_z + (pred_x_real+ pred_y_real) * 0
+        pred = pred_z + (pred_x_real+ pred_y_real) / 2
         pred = np.argmax(pred, 0)
         print(pred.shape)
         return pred
