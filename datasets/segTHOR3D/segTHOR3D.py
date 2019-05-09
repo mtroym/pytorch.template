@@ -81,11 +81,12 @@ class SegTHORy(Dataset):
         img = Image.fromarray(img[:, sid, :])
         gt = Image.fromarray(nib.load(gtp).get_data()[:, sid, :])
 
-        img = img.resize((512, 180))
-        gt = gt.resize((512, 180))
+        img = img.resize((180, 512))
+        gt = gt.resize((180, 512))
 
-        img = np.array(img).transpose()
-        gt = np.array(gt).astype(np.uint8).transpose()
+        img = np.array(img)
+        gt = np.array(gt).astype(np.uint8)
+        print(gt.shape)
         # some preprocessing...
         img, gt = self._transform(img, gt)
         img_ = np.array(img)
@@ -140,11 +141,12 @@ class SegTHORx(Dataset):
         img = Image.fromarray(img[sid, :, :])
         gt = Image.fromarray(nib.load(gtp).get_data()[sid, :, :])
 
-        img = img.resize((512, 180))
-        gt = gt.resize((512, 180))
+        img = img.resize((180, 512))
+        gt = gt.resize((180, 512))
 
-        img = np.array(img).transpose()
-        gt = np.array(gt).astype(np.uint8).transpose()
+        img = np.array(img)
+        gt = np.array(gt).astype(np.uint8)
+        print(gt.shape)
         # some preprocessing...
         img, gt = self._transform(img, gt)
         img_ = np.array(img)

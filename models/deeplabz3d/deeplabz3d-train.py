@@ -116,7 +116,7 @@ class Trainer:
         for i in range(h): #252
             cc = []
             for j in range(c):
-                pred_x_slice = Image.fromarray(pred_x[j, i, :, :])
+                pred_x_slice = Image.fromarray(pred_x[j, i, :, :])  # 316 x 180
                 pred_x_slice = pred_x_slice.resize((z, 316))
                 cc.append(np.array(pred_x_slice))
             cc = np.stack(cc, 0)
