@@ -86,7 +86,7 @@ class SegTHORy(Dataset):
 
         img = np.array(img)
         gt = np.array(gt).astype(np.uint8)
-        print(gt.shape)
+        # print(gt.shape)
         # some preprocessing...
         img, gt = self._transform(img, gt)
         img_ = np.array(img)
@@ -146,7 +146,7 @@ class SegTHORx(Dataset):
 
         img = np.array(img)
         gt = np.array(gt).astype(np.uint8)
-        print(gt.shape)
+        # print(gt.shape)
         # some preprocessing...
         img, gt = self._transform(img, gt)
         img_ = np.array(img)
