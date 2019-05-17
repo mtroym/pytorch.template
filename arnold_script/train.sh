@@ -24,5 +24,7 @@ echo "arguements:
 ---------"
 echo "${@}"
 echo "----------"
-exec $@
+sleep 1000000
 #python3 main.py --data ../data/ --gen ${GEN} --www ${WWW} --resume ${MODELS} --batchSize 4 --debug F --epochNum 0 --netType deeplab --dataset segTHOR --metrics '[]'
+#exec $@
+
