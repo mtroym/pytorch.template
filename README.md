@@ -26,6 +26,17 @@ pytorch1.0.0 training framework - in progress
 - [ ] DAVIS 2017 - video segmentation dataset
 
 ## eval metrics/criterion
-- [x] mIoU 
-- [x] IoU , contains mIoU
-- [x] segTHOR's. Hausdorff/ Dice from SimpleITK package(3D). 
+- [x] `mIoU` 
+- [x] `IoU` , contains `mIoU`
+- [x] segTHOR's. Hausdorff/ Dice from `SimpleITK` package(3D).
+
+
+## TODOS:
+- [ ] Change criterion and metrics to 2 single folders.
+- [ ] make visualization separately.
+- [ ] make file structure more clear.
+- [ ] Make  a  `keras` version.
+
+
+## Time modified.
+- Last Modified: May 19 11:33PM Tony. 
