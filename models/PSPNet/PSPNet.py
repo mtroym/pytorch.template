@@ -7,7 +7,7 @@ import models.PSPNet.extractors as extractors
 
 class PSPModule(nn.Module):
     def __init__(self, features, out_features=1024, sizes=(1, 2, 3, 6)):
-        super().__init__()
+        super(self, PSPModule).__init__()
         self.stages = []
         self.stages = nn.ModuleList([self._make_stage(features, size) for size in sizes])
         self.bottleneck = nn.Conv2d(features * (len(sizes) + 1), out_features, kernel_size=1)
@@ -27,7 +27,7 @@ class PSPModule(nn.Module):
 
 class PSPUpsample(nn.Module):
     def __init__(self, in_channels, out_channels):
-        super().__init__()
+        super(self, PSPUpsample).__init__()
         self.conv = nn.Sequential(
             nn.Conv2d(in_channels, out_channels, 3, padding=1),
             nn.BatchNorm2d(out_channels),
@@ -43,7 +43,7 @@ class PSPUpsample(nn.Module):
 class PSPNet(nn.Module):
     def __init__(self, n_classes=18, sizes=(1, 2, 3, 6), psp_size=2048, deep_features_size=1024, backend='resnet34',
                  pretrained=True):
-        super().__init__()
+        super(self, PSPNet).__init__()
         self.feats = getattr(extractors, backend)(pretrained)
         self.psp = PSPModule(psp_size, 1024, sizes)
         self.drop_1 = nn.Dropout2d(p=0.3)

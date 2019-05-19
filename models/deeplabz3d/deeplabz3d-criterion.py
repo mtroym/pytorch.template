@@ -239,14 +239,6 @@ def createMetrics(opt, model):
 
 
 if __name__ == '__main__':
-    # import opts
-    #
-    # opt = opts.parse()
-    # M = Metrics(opt, ['mIoU'], ignore_index=0)
-    # x = np.ones((10, 30, 30))
-    # y = np.ones((10, 30, 30))
-    # for m in M.name:
-    #     print(M[m](x, y))
     a = dict()
     a['x'] = 1
     a['y'] = 2

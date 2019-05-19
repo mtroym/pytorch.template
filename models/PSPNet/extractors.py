@@ -13,7 +13,6 @@ def load_weights_sequential(target, source_state):
     model_to_load= {k: v for k, v in source_state.items() if k in target.state_dict().keys()}
     target.load_state_dict(model_to_load)
 
-
 '''
     Implementation of dilated ResNet-101 with deep supervision. Downsampling is changed to 8x
 '''
