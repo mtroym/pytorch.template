@@ -34,7 +34,7 @@ class Custom_Criterion(nn.Module):
 
 
 def createMetrics(opt, model):
-    return IoU
+    return IoU(C=opt.numClasses, ignore=0)
 
 
 class IoU(nn.Module):

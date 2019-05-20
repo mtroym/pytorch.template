@@ -3,7 +3,6 @@ import os
 
 import numpy as np
 
-
 DEBUG = True
 
 class RunningAverage:
@@ -168,7 +167,6 @@ class StoreArray:
         Z: number of slices. TO same level of single paths.
         :return:None
         """
-        print(self.path)
         folder_with_instance = os.listdir(self.path)
         for ins in folder_with_instance:
             # validate the `ins` is the dir of one instance.

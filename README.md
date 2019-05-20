@@ -12,7 +12,7 @@ pytorch1.0.0 training framework - in progress
 - [x] ~~deeplab v3+ - Object Segmentation task~~
 - [x] deepLab3D custom model.
 - [x] deepLabZ custom model. 
-- [ ] PSPNet for semantic segmentation.
+- [x] PSPNet for semantic segmentation.
 - [ ] CRF/MRF - post  processing for object segmentation task.
 - [ ] Bi-AtrousLSTM (Bi-Directional Atrous LSTM//cascaded LSTM**)
 
