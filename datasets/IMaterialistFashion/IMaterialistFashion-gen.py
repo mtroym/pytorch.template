@@ -19,7 +19,7 @@ def exec(opt, cacheFilePath):
     label_desc_path = os.path.join(opt.data, 'label_descriptions.json')
     label_desc = json.load(open(label_desc_path))
     # print(label_desc)
-    df = pd.read_csv(open('/Users/tony/Develop/data/IMaterialistFashion/train.csv', 'r'))
+    df = pd.read_csv(open(os.path.join(opt.data, 'train.csv'), 'r'))
     img_ind_num = df.groupby("ImageId")["ClassId"].count()
     all_trainval_num = img_ind_num.count()
     split_rate = 0.75

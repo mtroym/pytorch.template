@@ -4,5 +4,5 @@ python3 main.py --data /Users/tony/Develop/data/ \
 --netType PSPNet --dataset IMaterialistFashion \
 --metrics '[]' --LR 0.000001 \
 --nThreads 0 --nEpochs 110 \
---logDir ../log/ --debug F \
+--logDir ../log/ --debug T \
 --logNum 1 --optimizer SGD --epochNum -1
