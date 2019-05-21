@@ -18,6 +18,10 @@ class IMat(Dataset):
         WIDTH, HEIGHT = label_image.shape
         train_image = cv2.resize(img, (WIDTH, HEIGHT), interpolation=cv2.INTER_AREA)
         train_image = train_image.transpose(2,0,1)
+        # only for appeal object.
+        # 0-26 classes, 27 - bg
+        label_image[label_image >= 27] = 27
+
         # todo: real-time augmentations.
         return train_image, label_image
 
@@ -27,5 +31,5 @@ class IMat(Dataset):
 
 def getInstance(info, opt, split):
     myInstance = IMat(info, opt, split)
-    opt.numClasses = 47
+    opt.numClasses = 27
     return myInstance
