@@ -4,6 +4,10 @@ import numpy as np
 import criterions.lovasz_loss
 
 
+def initCriterion(criterion, model):
+    pass
+
+
 def createCriterion(opt, model):
     return Custom_Criterion(ignore=-100)
 
@@ -34,7 +38,7 @@ class Custom_Criterion(nn.Module):
 
 
 def createMetrics(opt, model):
-    return IoU(C=opt.numClasses, ignore=0)
+    return IoU(C=opt.numClasses, ignore=opt.numClasses-1)
 
 
 class IoU(nn.Module):
