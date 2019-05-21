@@ -31,5 +31,5 @@ class IMat(Dataset):
 
 def getInstance(info, opt, split):
     myInstance = IMat(info, opt, split)
-    opt.numClasses = 27
+    opt.numClasses = 28
     return myInstance
