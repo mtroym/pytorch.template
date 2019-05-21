@@ -20,7 +20,7 @@ def updateLog(epoch, i, length, time, err, Acc):
 
 class BoardX:
     def __init__(self, opt, metrics, suffix, log_num):
-        self.writer = tensorboardX.SummaryWriter(log_dir=opt.logDir)
+        self.writer = tensorboardX.SummaryWriter(opt.logDir)
         self.opt = opt
         self.metrics = metrics
         self.suffix = suffix
