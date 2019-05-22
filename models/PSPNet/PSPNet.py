@@ -82,8 +82,8 @@ class PSPNet(nn.Module):
 
 
 def createModel(opt):
-    model = PSPNet(opt.numClasses, sizes=(1, 2, 3, 6), psp_size=512, deep_features_size=512, backend='resnet34',
-                   pretrained=True)
+    model = PSPNet(opt.numClasses, sizes=(1, 2, 3, 6), psp_size=512, deep_features_size=512, backend=opt.backbone,
+                   pretrained=False)
     if opt.GPU:
         model = model.cuda()
     return model

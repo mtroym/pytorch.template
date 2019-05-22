@@ -24,7 +24,7 @@ def exec(opt, cacheFilePath):
     all_trainval_num = img_ind_num.count()
     split_rate = 0.75
     train_num = np.ceil(split_rate * all_trainval_num)
-    train, val = processing(opt.data, img_ind_num, train_num, df)
+    train, val = processing(opt, opt.data, img_ind_num, train_num, df)
     info = {
         "label_desc": label_desc,
         'base_dir': opt.data,
@@ -71,7 +71,7 @@ def make_onehot_vec(x):
     vec[x] = 1
     return vec
 
-def processing(path, img_ind_num, train_num, data_frame):
+def processing(opt, path, img_ind_num, train_num, data_frame):
     print("=> start collecting training data....")
     train_img_dir = os.path.join(path, 'train')
     index = data_frame.index.values[0]
@@ -79,6 +79,8 @@ def processing(path, img_ind_num, train_num, data_frame):
     val_set = []
 
     for i, (img_name, ind_num) in tqdm(enumerate(img_ind_num.items())):
+        if opt.debug and i >  100:
+            break
         # print(img_name, train_img_dir)
         segment_df = (data_frame.loc[index:index + ind_num - 1, :]).reset_index(drop=True)
         index += ind_num
