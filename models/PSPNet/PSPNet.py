@@ -82,8 +82,16 @@ class PSPNet(nn.Module):
 
 
 def createModel(opt):
-    model = PSPNet(opt.numClasses, sizes=(1, 2, 3, 6), psp_size=2048, deep_features_size=512, backend=opt.backbone,
+    pspSize = 512
+    if opt.backbone == 'resnet101':
+        pspSize = 2048
+    elif opt.backbone == 'resnet34':
+        pspSize = 2048
+    # todo: ...
+    model = PSPNet(opt.numClasses, sizes=(1, 2, 3, 6), psp_size=pspSize, deep_features_size=512, backend=opt.backbone,
                    pretrained=False)
     if opt.GPU:
         model = model.cuda()
+    if len(opt.GPUs) >= 1:
+        model = nn.DataParallel(model, device_ids=opt.GPUs.split(','))
     return model
