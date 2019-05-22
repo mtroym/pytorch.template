@@ -23,8 +23,8 @@ def setup(opt, checkpoint):
         print('=> Resuming optimizer state from ' + optimPath)
         optimState = torch.load(optimPath)
 
-    if isinstance(model, nn.DataParallel):
-        model = model.get(0)
+    # if isinstance(model, nn.DataParallel):
+    #     model = model.
 
     if opt.cudnn == 'fastest':
         cudnn.fastest = True
