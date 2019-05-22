@@ -20,7 +20,8 @@ class PSPModule(nn.Module):
 
     def forward(self, feats):
         h, w = feats.size(2), feats.size(3)
-        priors = [F.interpolate(input=stage(feats), size=(h, w), mode='bilinear', align_corners=False) for stage in self.stages] + [feats]
+        priors = [F.interpolate(input=stage(feats), size=(h, w), mode='bilinear', align_corners=False) for stage in
+                  self.stages] + [feats]
         bottle = self.bottleneck(torch.cat(priors, 1))
         return self.relu(bottle)
 
@@ -93,5 +94,5 @@ def createModel(opt):
     if opt.GPU:
         model = model.cuda()
     if len(opt.GPUs) >= 1:
-        model = nn.DataParallel(model, device_ids=opt.GPUs.split(','))
+        model = nn.DataParallel(model, device_ids=eval('[' + opt.GPUs + ']'))
     return model
