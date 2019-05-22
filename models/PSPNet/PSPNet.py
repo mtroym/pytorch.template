@@ -90,9 +90,7 @@ def createModel(opt):
         pspSize = 2048
     # todo: ...
     model = PSPNet(opt.numClasses, sizes=(1, 2, 3, 6), psp_size=pspSize, deep_features_size=512, backend=opt.backbone,
-                   pretrained=False)
+                   pretrained=True)
     if opt.GPU:
         model = model.cuda()
-    if len(opt.GPUs) >= 1:
-        model = nn.DataParallel(model, device_ids=eval('[' + opt.GPUs + ']'))
     return model

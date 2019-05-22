@@ -25,6 +25,9 @@ def setup(opt, checkpoint):
 
     # if isinstance(model, nn.DataParallel):
     #     model = model.
+    if len(opt.GPUs) >= 1:
+        model = nn.DataParallel(model, device_ids=eval('[' + opt.GPUs + ']'))
+
 
     if opt.cudnn == 'fastest':
         cudnn.fastest = True

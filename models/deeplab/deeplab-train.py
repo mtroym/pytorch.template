@@ -88,8 +88,8 @@ class Trainer:
                     metrics = self.metrics(preds, targetV)
 
             # save each slice ...
-            store_array_pred.update(pid, sid, preds.detach().cpu().numpy())
-            store_array_gt.update(pid, sid, targetV.detach().cpu().numpy())
+            # store_array_pred.update(pid, sid, preds.detach().cpu().numpy())
+            # store_array_gt.update(pid, sid, targetV.detach().cpu().numpy())
 
             runTime = time.time() - start - datatime
             log = self.bb.update(loss_record, {'TD': datatime, 'TR': runTime}, metrics, split, i, epoch)
